@@ -1,18 +1,18 @@
-package io.hoopit.firebasecomponents.pagedlist
+package io.hoopit.firebasecomponents.paging
 
 import androidx.lifecycle.LiveData
 import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DatabaseError
-import io.hoopit.firebasecomponents.FirebaseChildEventListener
-import io.hoopit.firebasecomponents.FirebaseConnectionManager
-import io.hoopit.firebasecomponents.IFirebaseListEntity
-import io.hoopit.firebasecomponents.livedata.FirebasePagedListLiveData
+import io.hoopit.firebasecomponents.core.FirebaseChildEventListener
+import io.hoopit.firebasecomponents.core.FirebaseConnectionManager
+import io.hoopit.firebasecomponents.core.IFirebaseEntity
+import io.hoopit.firebasecomponents.lifecycle.FirebasePagedListLiveData
 import kotlin.reflect.KClass
 
 @Suppress("unused")
-class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, RemoteType : IFirebaseListEntity>(
+class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, RemoteType : IFirebaseEntity>(
     private val factory: IFirebaseDataSourceFactory<Key, RemoteType, LocalType>,
     config: PagedList.Config,
     classModel: KClass<RemoteType>
@@ -48,8 +48,8 @@ class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, Remot
      */
     fun build(): LiveData<PagedList<LocalType>> {
         val liveData = FirebasePagedListLiveData<PagedList<LocalType>>(
-            factory.query,
-            firebaseConnectionManager = FirebaseConnectionManager
+                factory.query,
+                firebaseConnectionManager = FirebaseConnectionManager
         )
         liveData.addSource(livePagedListBuilder.setBoundaryCallback(buildBoundaryCallback()).build()) {
             liveData.value = it
@@ -59,18 +59,18 @@ class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, Remot
 
     private fun buildBoundaryCallback(): FirebasePagedListBoundaryCallback<LocalType, Key> {
         return FirebasePagedListChildBoundaryCallback(
-            factory.query,
-            factory.keyFunction,
-            config.initialListener,
-            config.frontListener,
-            config.endListener,
-            FirebaseConnectionManager
+                factory.query,
+                factory.keyFunction,
+                config.initialListener,
+                config.frontListener,
+                config.endListener,
+                FirebaseConnectionManager
         )
     }
 
-    class Listener<RemoteType : IFirebaseListEntity>(
+    class Listener<RemoteType : IFirebaseEntity>(
         classModel: KClass<RemoteType>,
-        private val store: FirebasePagedListMemoryStore<*, RemoteType>
+        private val store: FirebasePagedListQueryCache<*, RemoteType>
     ) : FirebaseChildEventListener<RemoteType>(classModel) {
 
         override fun cancelled(error: DatabaseError) {

@@ -1,11 +1,11 @@
-package io.hoopit.firebasecomponents
+package io.hoopit.firebasecomponents.core
 
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import kotlin.reflect.KClass
 
-abstract class FirebaseChildEventListener<T : IFirebaseListEntity>(
+abstract class FirebaseChildEventListener<T : IFirebaseEntity>(
     private val classModel: KClass<out T>
 ) : ChildEventListener {
 

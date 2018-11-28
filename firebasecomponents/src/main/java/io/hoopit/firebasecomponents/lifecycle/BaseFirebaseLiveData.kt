@@ -1,10 +1,10 @@
-package io.hoopit.firebasecomponents.livedata
+package io.hoopit.firebasecomponents.lifecycle
 
 import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.MediatorLiveData
 
-abstract class FirebaseLiveData<T> : MediatorLiveData<T>() {
+abstract class BaseFirebaseLiveData<T> : MediatorLiveData<T>() {
 
     private val handler = Handler(Looper.getMainLooper())
 

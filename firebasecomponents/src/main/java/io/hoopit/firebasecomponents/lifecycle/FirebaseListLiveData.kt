@@ -1,20 +1,24 @@
-package io.hoopit.firebasecomponents.livedata
+package io.hoopit.firebasecomponents.lifecycle
 
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.Query
-import io.hoopit.firebasecomponents.FirebaseChildEventListener
-import io.hoopit.firebasecomponents.IFirebaseListEntity
-import io.hoopit.firebasecomponents.pagedlist.FirebaseCollection
+import io.hoopit.firebasecomponents.core.FirebaseChildEventListener
+import io.hoopit.firebasecomponents.core.FirebaseCollection
+import io.hoopit.firebasecomponents.core.IFirebaseEntity
 import kotlin.reflect.KClass
 
-@Suppress("unused")
-class FirebaseListLiveData<K : Comparable<K>, T : IFirebaseListEntity>(
+class FirebaseListLiveData<K : Comparable<K>, T : IFirebaseEntity>(
     private val query: Query,
     private val classModel: KClass<out T>,
-    orderKeyFunction: (T) -> K
-) : FirebaseLiveData<Collection<T>>() {
+    private val collection: FirebaseCollection<K, T>
+) : BaseFirebaseLiveData<List<T>>() {
 
-    private val collection = FirebaseCollection(orderKeyFunction, query.spec.params.isViewFromLeft)
+    constructor(
+        query: Query,
+        classModel: KClass<out T>,
+        orderKeyFunction: (T) -> K
+    ) : this(query, classModel, FirebaseCollection<K, T>(orderKeyFunction, query.spec.params.isViewFromLeft))
+
 
     val listener = object : FirebaseChildEventListener<T>(classModel = classModel) {
 
@@ -32,12 +36,12 @@ class FirebaseListLiveData<K : Comparable<K>, T : IFirebaseListEntity>(
 
         override fun childAdded(previousChildName: String?, child: T) {
             collection.addAfter(previousChildName, child)
-            postValue(collection)
+            postValue(collection.toList())
         }
 
         override fun childRemoved(child: T) {
             collection.remove(child)
-            postValue(collection)
+            postValue(collection.toList())
         }
     }
 

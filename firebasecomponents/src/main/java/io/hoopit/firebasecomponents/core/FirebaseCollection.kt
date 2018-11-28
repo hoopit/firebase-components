@@ -1,11 +1,10 @@
-package io.hoopit.firebasecomponents.pagedlist
+package io.hoopit.firebasecomponents.core
 
-import io.hoopit.firebasecomponents.IFirebaseListEntity
 import java.util.Collections
 import java.util.LinkedList
 import java.util.concurrent.ConcurrentSkipListMap
 
-class FirebaseCollection<K : Comparable<K>, V : IFirebaseListEntity>
+class FirebaseCollection<K : Comparable<K>, V : IFirebaseEntity>
 private constructor(
     private val map: ConcurrentSkipListMap<K, V>,
     private val ascending: Boolean,
@@ -47,7 +46,7 @@ private constructor(
     }
 }
 
-class FirebaseListCollection<K, V : IFirebaseListEntity>
+class FirebaseListCollection<K, V : IFirebaseEntity>
 private constructor(
     private val list: MutableList<V>,
     private val ascending: Boolean,

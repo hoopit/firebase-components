@@ -1,9 +1,9 @@
-package io.hoopit.firebasecomponents.pagedlist
+package io.hoopit.firebasecomponents.paging
 
 import androidx.paging.PagedList
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.Query
-import io.hoopit.firebasecomponents.FirebaseConnectionManager
+import io.hoopit.firebasecomponents.core.FirebaseConnectionManager
 
 /***
  * [PagedList.BoundaryCallback] for Firebase list resources

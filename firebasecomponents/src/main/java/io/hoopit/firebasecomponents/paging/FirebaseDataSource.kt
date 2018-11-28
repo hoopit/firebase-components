@@ -1,11 +1,11 @@
-package io.hoopit.firebasecomponents.pagedlist
+package io.hoopit.firebasecomponents.paging
 
 import androidx.paging.ItemKeyedDataSource
-import io.hoopit.firebasecomponents.IFirebaseListEntity
+import io.hoopit.firebasecomponents.core.IFirebaseEntity
 
-class FirebaseDataSource<Key : Comparable<Key>, StoreType : IFirebaseListEntity>(
+class FirebaseDataSource<Key : Comparable<Key>, StoreType : IFirebaseEntity>(
     private val keyFunction: (StoreType) -> Key,
-    private val store: FirebasePagedListMemoryStore<Key, StoreType>
+    private val store: FirebasePagedListQueryCache<Key, StoreType>
 ) : ItemKeyedDataSource<Pair<String, Key>, StoreType>() {
 
     override fun loadInitial(
@@ -13,10 +13,10 @@ class FirebaseDataSource<Key : Comparable<Key>, StoreType : IFirebaseListEntity>
         callback: LoadInitialCallback<StoreType>
     ) {
         callback.onResult(
-            store.getAfter(
-                params.requestedInitialKey?.second,
-                params.requestedLoadSize
-            )
+                store.getAfter(
+                        params.requestedInitialKey?.second,
+                        params.requestedLoadSize
+                )
         )
     }
 

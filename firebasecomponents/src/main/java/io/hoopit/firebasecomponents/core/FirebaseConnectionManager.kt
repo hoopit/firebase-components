@@ -1,4 +1,4 @@
-package io.hoopit.firebasecomponents
+package io.hoopit.firebasecomponents.core
 
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.Query
@@ -6,7 +6,8 @@ import com.google.firebase.database.ValueEventListener
 
 object FirebaseConnectionManager {
 
-    private data class FirebaseListener private constructor(
+    private data class FirebaseListener
+    private constructor(
         private val query: Query,
         private val childEventListener: ChildEventListener?,
         private val valueEventListener: ValueEventListener?,
@@ -14,10 +15,10 @@ object FirebaseConnectionManager {
     ) {
 
         constructor(baseQuery: Query, childEventListener: ChildEventListener) : this(
-            baseQuery,
-            childEventListener,
-            null,
-            false
+                baseQuery,
+                childEventListener,
+                null,
+                false
         )
 
         constructor(
@@ -81,22 +82,22 @@ object FirebaseConnectionManager {
 
     fun addListener(query: Query, subQuery: Query, listener: ChildEventListener) {
         eventListeners.getOrPut(query) { FirebaseSubscription(query) }
-            .addListener(FirebaseListener(subQuery, listener))
+                .addListener(FirebaseListener(subQuery, listener))
     }
 
     fun addListener(query: Query, subQuery: Query, listener: ValueEventListener) {
         eventListeners.getOrPut(query) { FirebaseSubscription(query) }
-            .addListener(FirebaseListener(subQuery, listener))
+                .addListener(FirebaseListener(subQuery, listener))
     }
 
     fun addListener(query: Query, listener: ChildEventListener) {
         eventListeners.getOrPut(query) { FirebaseSubscription(query) }
-            .addListener(FirebaseListener(query, listener))
+                .addListener(FirebaseListener(query, listener))
     }
 
     fun addListener(query: Query, listener: ValueEventListener, once: Boolean = false) {
         eventListeners.getOrPut(query) { FirebaseSubscription(query) }
-            .addListener(FirebaseListener(query, listener, once))
+                .addListener(FirebaseListener(query, listener, once))
     }
 
     fun activate(query: Query) {

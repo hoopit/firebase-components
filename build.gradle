@@ -23,8 +23,9 @@ allprojects {
 }
 
 ext {
-    firebaseCoreVersion = "16.0.5"
+    firebaseCoreVersion = "16.0.4"
     firebaseDatabaseVersion = "16.0.5"
+    mavenGradleVersion = "2.1"
 }
 
 task clean(type: Delete) {
