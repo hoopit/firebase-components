@@ -20,7 +20,7 @@ class FirebaseListLiveData<K : Comparable<K>, T : IFirebaseEntity>(
     ) : this(query, classModel, FirebaseCollection<K, T>(orderKeyFunction, query.spec.params.isViewFromLeft))
 
 
-    val listener = object : FirebaseChildEventListener<T>(classModel = classModel) {
+    private val listener = object : FirebaseChildEventListener<T>(classModel = classModel) {
 
         override fun cancelled(error: DatabaseError) {
             TODO("not implemented")
