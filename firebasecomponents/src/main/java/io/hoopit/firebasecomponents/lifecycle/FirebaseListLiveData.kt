@@ -10,14 +10,16 @@ import kotlin.reflect.KClass
 class FirebaseListLiveData<K : Comparable<K>, T : IFirebaseEntity>(
     private val query: Query,
     private val classModel: KClass<out T>,
-    private val collection: FirebaseCollection<K, T>
-) : BaseFirebaseLiveData<List<T>>() {
+    private val collection: FirebaseCollection<K, T>,
+    disconnectDelay: Long = 2000
+) : DelayedTransitionLiveData<List<T>>(disconnectDelay) {
 
     constructor(
         query: Query,
         classModel: KClass<out T>,
+        disconnectDelay: Long = 2000,
         orderKeyFunction: (T) -> K
-    ) : this(query, classModel, FirebaseCollection<K, T>(orderKeyFunction, query.spec.params.isViewFromLeft))
+    ) : this(query, classModel, FirebaseCollection<K, T>(orderKeyFunction, query.spec.params.isViewFromLeft), disconnectDelay)
 
 
     private val listener = object : FirebaseChildEventListener<T>(classModel = classModel) {
@@ -32,6 +34,7 @@ class FirebaseListLiveData<K : Comparable<K>, T : IFirebaseEntity>(
 
         override fun childChanged(previousChildName: String?, child: T) {
             collection.update(previousChildName, child)
+            postValue(collection.toList())
         }
 
         override fun childAdded(previousChildName: String?, child: T) {
@@ -45,11 +48,11 @@ class FirebaseListLiveData<K : Comparable<K>, T : IFirebaseEntity>(
         }
     }
 
-    override fun addListener() {
+    override fun delayedOnActive() {
         query.addChildEventListener(listener)
     }
 
-    override fun removeListener() {
+    override fun delayedOnInactive() {
         query.removeEventListener(listener)
     }
 }

@@ -8,13 +8,14 @@ import kotlin.reflect.KClass
 
 class FirebaseValueLiveData<T : Any>(
     private val reference: DatabaseReference,
-    private val classModel: KClass<T>
-) : BaseFirebaseLiveData<T>(), ValueEventListener {
-    override fun addListener() {
+    private val classModel: KClass<T>,
+    disconnectDelay: Long = 2000
+) : DelayedTransitionLiveData<T>(disconnectDelay), ValueEventListener {
+    override fun delayedOnActive() {
         reference.addValueEventListener(this)
     }
 
-    override fun removeListener() = reference.removeEventListener(this)
+    override fun delayedOnInactive() = reference.removeEventListener(this)
 
     override fun onCancelled(error: DatabaseError) {
         TODO("not implemented")

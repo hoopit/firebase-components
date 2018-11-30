@@ -1,5 +1,7 @@
 package io.hoopit.firebasecomponents.core
 
+import com.google.firebase.database.Query
+
 /**
  * Interface for firebase object.
  * [entityId] holds the firebase key of the object.
@@ -7,4 +9,16 @@ package io.hoopit.firebasecomponents.core
 interface IFirebaseEntity {
     var entityId: String
 
+    object SortBy {
+
+        fun key(item: IFirebaseEntity) = item.entityId
+
+
+    }
+
+}
+
+interface IFirebaseQuery {
+    val disconnectDelay: Long
+    val sourceQuery: Query
 }

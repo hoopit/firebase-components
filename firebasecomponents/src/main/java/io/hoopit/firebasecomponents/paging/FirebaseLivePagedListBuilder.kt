@@ -6,34 +6,32 @@ import androidx.paging.PagedList
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DatabaseError
 import io.hoopit.firebasecomponents.core.FirebaseChildEventListener
-import io.hoopit.firebasecomponents.core.FirebaseConnectionManager
 import io.hoopit.firebasecomponents.core.IFirebaseEntity
-import io.hoopit.firebasecomponents.lifecycle.FirebasePagedListLiveData
+import io.hoopit.firebasecomponents.lifecycle.FirebaseManagedWrapperLiveData
 import kotlin.reflect.KClass
 
 @Suppress("unused")
 class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, RemoteType : IFirebaseEntity>(
     private val factory: IFirebaseDataSourceFactory<Key, RemoteType, LocalType>,
     config: PagedList.Config,
-    classModel: KClass<RemoteType>
+    classModel: KClass<RemoteType>,
+    var disconnectDelay: Long = 2000
 ) {
 
     private val listener = Listener(classModel, factory.store)
 
-    private val config = Config(listener, listener, listener)
+    private val config = BoundaryCallbackConfig(listener, listener, listener)
 
     enum class FirebaseReferenceMode {
         LIVE,
         SINGLE
     }
 
-    data class Config(
+    data class BoundaryCallbackConfig(
+            // TODO: Consider allowing custom page size, but requires custom Query object to hold sort order
         val initialListener: ChildEventListener? = null,
         val frontListener: ChildEventListener? = null,
         val endListener: ChildEventListener? = null,
-        val initialCount: Int = 30,
-        val nextCount: Int = -1,
-        val previousCount: Int = -1,
         val ignoreRemove: Boolean = false,
         val initialMode: FirebaseReferenceMode = FirebaseReferenceMode.LIVE,
         val previousPagesMode: FirebaseReferenceMode = FirebaseReferenceMode.SINGLE,
@@ -47,9 +45,10 @@ class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, Remot
      * Builds the PagedList LiveData. Boundary callback is overwritten.
      */
     fun build(): LiveData<PagedList<LocalType>> {
-        val liveData = FirebasePagedListLiveData<PagedList<LocalType>>(
+        val liveData = FirebaseManagedWrapperLiveData<PagedList<LocalType>>(
                 factory.query,
-                firebaseConnectionManager = FirebaseConnectionManager
+                factory.store.firebaseConnectionManager,
+                disconnectDelay
         )
         liveData.addSource(livePagedListBuilder.setBoundaryCallback(buildBoundaryCallback()).build()) {
             liveData.value = it
@@ -58,13 +57,13 @@ class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, Remot
     }
 
     private fun buildBoundaryCallback(): FirebasePagedListBoundaryCallback<LocalType, Key> {
-        return FirebasePagedListChildBoundaryCallback(
+        return FirebaseManagedPagedListBoundaryCallback(
                 factory.query,
                 factory.keyFunction,
                 config.initialListener,
                 config.frontListener,
                 config.endListener,
-                FirebaseConnectionManager
+                factory.store.firebaseConnectionManager
         )
     }
 

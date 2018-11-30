@@ -10,10 +10,10 @@ import io.hoopit.firebasecomponents.core.FirebaseConnectionManager
  */
 abstract class FirebasePagedListBoundaryCallback<LocalType, Key>(
     private val query: Query,
-    private val sortKey: (LocalType) -> Key,
-    private val initialCount: Int = 30,
-    private val nextCount: Int = 30,
-    private val previousCount: Int = 30
+    private val sortKey: (LocalType) -> Key
+//    private val initialCount: Int = 4,
+//    private val nextCount: Int = 4,
+//    private val previousCount: Int = 4
 ) : PagedList.BoundaryCallback<LocalType>() {
 
     override fun onZeroItemsLoaded() {
@@ -62,7 +62,7 @@ abstract class FirebasePagedListBoundaryCallback<LocalType, Key>(
 /***
  * [PagedList.BoundaryCallback] for Firebase list resources
  */
-class FirebasePagedListChildBoundaryCallback<LocalType, Key>(
+class FirebaseManagedPagedListBoundaryCallback<LocalType, Key>(
     query: Query,
     sortKey: (LocalType) -> Key,
     private val initialListener: ChildEventListener?,

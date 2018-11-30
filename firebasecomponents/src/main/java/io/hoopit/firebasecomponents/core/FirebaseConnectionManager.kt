@@ -3,8 +3,37 @@ package io.hoopit.firebasecomponents.core
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
+import io.hoopit.firebasecomponents.cache.FirebaseListQueryCache
+import kotlin.reflect.KClass
 
-object FirebaseConnectionManager {
+class FirebaseConnectionManager {
+
+    companion object {
+        val defaultInstance = FirebaseConnectionManager()
+    }
+
+    data class FirebaseQuery<K : Comparable<K>, T : IFirebaseEntity>(
+        val query: Query,
+        val classModel: KClass<out IFirebaseEntity>,
+        val disconnectDelay: Long,
+        val orderByKey: (T) -> K
+    )
+
+    private val map = mutableMapOf<Query, FirebaseListQueryCache<*, *>>()
+
+    fun <K : Comparable<K>, T : IFirebaseEntity> getOrCreateCache(
+        query: Query,
+        classModel: KClass<T>,
+        disconnectDelay: Long,
+        orderByKey: (T) -> K
+    ): FirebaseListQueryCache<K, T> {
+        @Suppress("UNCHECKED_CAST")
+        return map.getOrPut(query) { FirebaseListQueryCache(query, classModel, disconnectDelay, this, orderByKey) } as FirebaseListQueryCache<K, T>
+    }
+
+    fun <K : Comparable<K>, T : IFirebaseEntity> getCachedItem(itemId: K, classModel: KClass<T>): T {
+        TODO()
+    }
 
     private data class FirebaseListener
     private constructor(
