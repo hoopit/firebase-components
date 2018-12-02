@@ -1,6 +1,8 @@
 package io.hoopit.firebasecomponents.core
 
 import com.google.firebase.database.ChildEventListener
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.core.view.QuerySpec
@@ -11,42 +13,105 @@ import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
-class FirebaseConnectionManager() {
+class CacheManager {
+
+}
+
+class ScopeManager(private val getSubscription: (Query) -> FirebaseConnectionManager.IFirebaseReference) {
+
+    private val scopes = ConcurrentHashMap<Query, SubscriptionScope>()
+
+    @Synchronized
+    fun getScope(query: Query): SubscriptionScope {
+        return scopes.getOrPut(query) { SubscriptionScope(query) }
+    }
+
+    @Synchronized
+    fun activate(query: Query) {
+        getScope(query).activate()
+    }
+
+    @Synchronized
+    fun deactivate(query: Query) {
+        scopes[query]?.deactivate()
+    }
+
+    inner class SubscriptionScope constructor(
+        private val scope: Query
+    ) {
+        private val listeners = ConcurrentHashMap<Query, MutableList<ChildEventListener>>()
+        private var active = false
+
+//        @Synchronized
+//        fun removeListener(subQuery: Query): T? {
+//            return subscriptions.remove(subQuery.spec)?.apply { unsubscribe() }
+//        }
+
+        @Synchronized
+        fun activate() {
+            if (!active) {
+                Timber.d("Adding listeners for: ${scope.spec}")
+                active = true
+                for ((query, listeners) in listeners) {
+                    getSubscription(query).subscribe(query, *listeners.toTypedArray())
+                    activate(query)
+                }
+            }
+        }
+
+        @Synchronized
+        fun deactivate() {
+            if (active) {
+                Timber.d("Removing listeners for: ${scope.spec}")
+                active = false
+                for ((query, listeners) in listeners) {
+                    getSubscription(query).unsubscribe(query, *listeners.toTypedArray())
+                    deactivate(query)
+                }
+            }
+        }
+
+        @Synchronized
+        fun addQuery(query: Query, listener: ChildEventListener) {
+            listeners.getOrPut(query) { mutableListOf() }.add(listener)
+        }
+    }
+}
+
+class FirebaseConnectionManager {
 
     companion object {
         val defaultInstance = FirebaseConnectionManager()
     }
 
     private val pagedListCache = mutableMapOf<QuerySpec, FirebasePagedListQueryCache<*, *>>()
-
     private val listCache = mutableMapOf<QuerySpec, FirebaseListQueryCache<*, *>>()
 
+    private val subscriptions = ConcurrentHashMap<QuerySpec, IFirebaseReference>()
 
-    private val pagedListScopes = ConcurrentHashMap<QuerySpec, SubscriptionScope<PagedListSubscription>>()
-    private val basicListScopes = ConcurrentHashMap<QuerySpec, SubscriptionScope<ListSubscription>>()
+    private val pagedListScopes = ScopeManager(::getSubscription)
+    private val scopes = ScopeManager(::getSubscription)
+
+    private fun getSubscription(query: Query): IFirebaseReference {
+        return subscriptions.getOrPut(query.spec) { FirebaseReference(querySpec = query.spec) }
+    }
+
+    // TODO: infinite depth sub queries
 
     fun activatePaging(query: Query) {
-        synchronized(pagedListScopes) {
-            pagedListScopes.getOrPut(query.spec) { SubscriptionScope(query) }.subscribe()
-        }
+        pagedListScopes.activate(query)
     }
 
     fun deactivatePaging(query: Query) {
-        synchronized(pagedListScopes) {
-            pagedListScopes[query.spec]?.unsubscribe()
-        }
+        pagedListScopes.deactivate(query)
     }
 
     fun activate(query: Query) {
-        synchronized(basicListScopes) {
-            basicListScopes.getOrPut(query.spec) { SubscriptionScope(query) }.subscribe()
-        }
+        scopes.activate(query)
     }
 
     fun deactivate(query: Query, dispose: Boolean = false) {
-        synchronized(basicListScopes) {
-            basicListScopes[query.spec]?.unsubscribe()
-        }
+        scopes.deactivate(query)
     }
 
     fun <K : Comparable<K>, T : IFirebaseEntity> getOrCreatePagedCache(
@@ -74,21 +139,25 @@ class FirebaseConnectionManager() {
         }.also { registerListQueryCache(it, query) } as FirebaseListQueryCache<K, T>
     }
 
-    fun registerListQueryCache(cache: FirebaseListQueryCache<*, *>, query: Query): ChildEventListener {
+    fun registerListQueryCache(cache: FirebaseListQueryCache<*, *>, query: Query) {
         listCache.getOrPut(query.spec) { cache }
-        synchronized(basicListScopes) {
-            val subs = basicListScopes.getOrPut(cache.query.spec) { SubscriptionScope(cache.query) }
-            return subs.getOrPut(cache.query) { ListSubscription(cache.query, cache.getListener()) }.childEventListener
-        }
+        val scope = scopes.getScope(cache.query)
+        return scope.addQuery(cache.query, cache.getListener())
+    }
+
+    fun addScopedSubscription(firebaseReference: IFirebaseReference, scope: Query) {
     }
 
 
-    fun addPagedListener(cache: FirebasePagedListQueryCache<*, *>, baseQuery: Query, subQuery: Query = baseQuery): Listener<out IFirebaseEntity> {
-        pagedListCache[baseQuery.spec] = cache
-        synchronized(pagedListScopes) {
-            val subs = pagedListScopes.getOrPut(baseQuery.spec) { SubscriptionScope(baseQuery) }
-            return subs.getOrPut(subQuery) { PagedListSubscription(subQuery, cache.getListener()) }.childEventListener
-        }
+    fun addUnscopedSubscription(firebaseReference: IFirebaseReference) {
+        subscriptions.getOrPut(firebaseReference.querySpec) { firebaseReference }
+    }
+
+    fun addPagedListener(cache: FirebasePagedListQueryCache<*, *>, scope: Query, subQuery: Query = scope): Listener<out IFirebaseEntity> {
+        pagedListCache[scope.spec] = cache
+        val listener = cache.getListener()
+        pagedListScopes.getScope(scope).addQuery(subQuery, listener)
+        return listener
     }
 
     fun createListener(query: Query, listener: ValueEventListener, once: Boolean = false) {
@@ -99,71 +168,58 @@ class FirebaseConnectionManager() {
         TODO()
     }
 
-    interface ISubscription {
-        fun on()
-        fun off()
-
+    interface IFirebaseReference {
+        fun subscribe(query: Query, vararg listeners: ChildEventListener)
+        fun unsubscribe(query: Query, vararg listeners: ChildEventListener)
+        val querySpec: QuerySpec
     }
 
-    data class ListSubscription(
-        val query: Query,
-        val childEventListener: ChildEventListener
-    ) : ISubscription {
+    class FirebaseReference(override val querySpec: QuerySpec) : IFirebaseReference, ChildEventListener {
 
-        override fun on() {
-            query.addChildEventListener(childEventListener)
+        override fun onCancelled(error: DatabaseError) {
+            subscribers.values.forEach { it.forEach { it.onCancelled(error) } }
         }
 
-        override fun off() = query.removeEventListener(childEventListener)
-    }
-
-    data class PagedListSubscription(
-        val query: Query,
-        val childEventListener: Listener<out IFirebaseEntity>
-    ) : ISubscription {
-
-        override fun on() {
-            query.addChildEventListener(childEventListener)
+        override fun onChildMoved(snapshot: DataSnapshot, previousChildKey: String?) {
+            subscribers.values.forEach { it.forEach { it.onChildMoved(snapshot, previousChildKey) } }
         }
 
-        override fun off() = query.removeEventListener(childEventListener)
-    }
+        override fun onChildChanged(snapshot: DataSnapshot, previousChildKey: String?) {
+            subscribers.values.forEach { it.forEach { it.onChildChanged(snapshot, previousChildKey) } }
+        }
 
-    private data class SubscriptionScope<T : ISubscription> constructor(
-        private val baseQuery: Query
-    ) {
-        private val subscriptions = ConcurrentHashMap<QuerySpec, T>()
+        override fun onChildAdded(snapshot: DataSnapshot, previousChildKey: String?) {
+            subscribers.values.forEach { it.forEach { it.onChildAdded(snapshot, previousChildKey) } }
+        }
 
-        private var active = false
+        override fun onChildRemoved(snapshot: DataSnapshot) {
+            subscribers.values.forEach { it.forEach { it.onChildRemoved(snapshot) } }
+        }
+
+        private val subscribers = mutableMapOf<Query, MutableList<ChildEventListener>>()
+
+        private var subscriptions = 0
 
         @Synchronized
-        fun removeListener(subQuery: Query): T? {
-            return subscriptions.remove(subQuery.spec)?.apply { off() }
+        override fun subscribe(query: Query, vararg listeners: ChildEventListener) {
+            assert(querySpec == query.spec) { "Can not subscribe to a Query with different QuerySpec." }
+            assert(!subscribers.contains(query)) { "Adding multiple listeners on the same Query is not yet supported. Consider creating a new Query." }
+            val list = subscribers.getOrPut(query) { mutableListOf() }
+            val added = list.addAll(listeners)
+            if (added && subscriptions == 0) query.addChildEventListener(this)
+            subscriptions += listeners.size
+
         }
 
         @Synchronized
-        fun subscribe() {
-            if (!active) {
-                Timber.d("Adding listeners for: ${baseQuery.spec}")
-                active = true
-                subscriptions.values.forEach { it.on() }
+        override fun unsubscribe(query: Query, vararg listeners: ChildEventListener) {
+            assert(querySpec == query.spec) { "Can not unsubscribe from a Query with different QuerySpec." }
+            listeners.forEach {
+                val removed = subscribers[query]?.remove(it)
+                if (removed == true) --subscriptions
             }
-        }
-
-        @Synchronized
-        fun unsubscribe() {
-            if (active) {
-                Timber.d("Removing listeners for: ${baseQuery.spec}")
-                active = false
-                subscriptions.values.forEach { it.off() }
-            }
-        }
-
-        @Synchronized
-        fun getOrPut(subQuery: Query, subscription: () -> T): T {
-            return subscriptions.getOrPut(subQuery.spec) {
-                subscription().also { if (active) it.on() }
-            }
+            if (subscriptions == 0) query.removeEventListener(this)
+            else if (subscriptions < 0) throw IllegalStateException("Attempting to unsub with 0 subs")
         }
     }
 

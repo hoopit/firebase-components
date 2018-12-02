@@ -11,24 +11,30 @@ import timber.log.Timber
 abstract class FirebasePagedListBoundaryCallback<LocalType, Key>(
     private val query: Query,
     private val sortKey: (LocalType) -> Key
-//    private val initialCount: Int = 4,
-//    private val nextCount: Int = 4,
-//    private val previousCount: Int = 4
 ) : PagedList.BoundaryCallback<LocalType>() {
 
     override fun onZeroItemsLoaded() {
+        Timber.d("called: onZeroItemsLoaded: ${query.spec}")
         addInitialListener(query)
     }
 
     override fun onItemAtEndLoaded(itemAtEnd: LocalType) {
-        if (query.spec.loadsAllData()) return
+        Timber.d("called: onItemAtEndLoaded: ${query.spec}")
+        if (query.spec.loadsAllData()) {
+            Timber.d("onItemAtEndLoaded: spec loads all data, ignoring: ${query.spec}")
+            return
+        }
         val q = if (query.spec.params.isViewFromLeft) startAt(query, itemAtEnd)
         else endAt(query, itemAtEnd)
         addEndListener(query, q)
     }
 
     override fun onItemAtFrontLoaded(itemAtFront: LocalType) {
-        if (query.spec.loadsAllData()) return
+        Timber.d("called: onItemAtFrontLoaded: ${query.spec}")
+        if (query.spec.loadsAllData()) {
+            Timber.d("onItemAtFrontLoaded: spec loads all data, ignoring: ${query.spec}")
+            return
+        }
         val q = if (query.spec.params.isViewFromLeft) endAt(query, itemAtFront)
         else startAt(query, itemAtFront)
         addFrontListener(query, q)
@@ -67,7 +73,6 @@ class FirebaseManagedPagedListBoundaryCallback<LocalType, Key>(
     sortKey: (LocalType) -> Key,
     private val firebaseConnectionManager: FirebaseConnectionManager,
     private val store: FirebasePagedListQueryCache<*, *>
-        // TODO: Consider passing cache as argument, and use it to add listeners
 ) : FirebasePagedListBoundaryCallback<LocalType, Key>(query, sortKey) {
 
     private val limit = query.spec.params.limit
