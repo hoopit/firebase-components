@@ -19,6 +19,11 @@ private constructor(
         else o2.compareTo(o1)
     }, ascending, orderKeyFunction)
 
+    fun getAround(key: K?, limit: Int): List<V> {
+        val list = key?.let { map.tailMap(it, false).values } ?: map.values
+        return list.take(limit)
+    }
+
     fun getAfter(key: K?, limit: Int): List<V> {
         val list = key?.let { map.tailMap(it, false).values } ?: map.values
         return list.take(limit)
@@ -44,6 +49,7 @@ private constructor(
     fun get(it: K): V? {
         return map[it]
     }
+
 }
 
 class FirebaseListCollection<K, V : IFirebaseEntity>

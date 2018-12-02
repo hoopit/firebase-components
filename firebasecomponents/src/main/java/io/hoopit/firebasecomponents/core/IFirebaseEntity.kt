@@ -9,7 +9,7 @@ import com.google.firebase.database.Query
 interface IFirebaseEntity {
     var entityId: String
 
-    object SortBy {
+    object orderBy {
 
         fun key(item: IFirebaseEntity) = item.entityId
 

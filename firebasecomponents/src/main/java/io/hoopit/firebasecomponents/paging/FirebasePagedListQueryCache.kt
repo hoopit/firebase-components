@@ -34,12 +34,16 @@ class FirebasePagedListQueryCache<K : Comparable<K>, Type : IFirebaseEntity>(
         return dataSourceFactory
     }
 
-    fun getAfter(requestedInitialKey: K?, limit: Int): List<Type> {
-        return collection.getAfter(requestedInitialKey, limit)
+    fun getAround(key: K?, limit: Int): List<Type> {
+        return collection.getAround(key, limit)
     }
 
-    fun getBefore(requestedInitialKey: K?, limit: Int): List<Type> {
-        return collection.getBefore(requestedInitialKey, limit)
+    fun getAfter(key: K, limit: Int): List<Type> {
+        return collection.getAfter(key, limit)
+    }
+
+    fun getBefore(key: K, limit: Int): List<Type> {
+        return collection.getBefore(key, limit)
     }
 
 

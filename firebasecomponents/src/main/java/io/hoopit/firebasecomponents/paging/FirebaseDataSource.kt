@@ -12,11 +12,14 @@ class FirebaseDataSource<Key : Comparable<Key>, StoreType : IFirebaseEntity>(
         params: LoadInitialParams<Pair<String, Key>>,
         callback: LoadInitialCallback<StoreType>
     ) {
+        val items = store.getAround(
+                params.requestedInitialKey?.second,
+                params.requestedLoadSize
+        )
         callback.onResult(
-                store.getAfter(
-                        params.requestedInitialKey?.second,
-                        params.requestedLoadSize
-                )
+                items,
+                items.firstOrNull()?.let { store.indexOf(it) } ?: 0,
+                store.size
         )
     }
 

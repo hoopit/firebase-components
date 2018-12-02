@@ -73,7 +73,11 @@ class ScopeManager(private val getSubscription: (Query) -> FirebaseConnectionMan
 
         @Synchronized
         fun addQuery(query: Query, listener: ChildEventListener) {
-            listeners.getOrPut(query) { mutableListOf() }.add(listener)
+            Timber.d("called: addQuery: ${query.spec}")
+            listeners.getOrPut(query) { mutableListOf() }.add(listener).also {
+                Timber.d("addQuery: activating listener immediately..")
+                if (active) getSubscription(query).subscribe(query, listener)
+            }
         }
     }
 }
@@ -121,10 +125,10 @@ class FirebaseConnectionManager {
         orderByKey: (T) -> K
     ): FirebasePagedListQueryCache<K, T> {
         // TODO: consider attaching initial listener immediately
-        synchronized(pagedListCache) {
-            @Suppress("UNCHECKED_CAST")
-            return pagedListCache.getOrPut(query.spec) { FirebasePagedListQueryCache(this, query, classModel, orderByKey) } as FirebasePagedListQueryCache<K, T>
-        }
+        @Suppress("UNCHECKED_CAST")
+        return pagedListCache.getOrPut(query.spec) {
+            FirebasePagedListQueryCache(this, query, classModel, orderByKey)
+        } as FirebasePagedListQueryCache<K, T>
     }
 
     fun <K : Comparable<K>, T : IFirebaseEntity> getOrCreateListCache(
@@ -143,14 +147,6 @@ class FirebaseConnectionManager {
         listCache.getOrPut(query.spec) { cache }
         val scope = scopes.getScope(cache.query)
         return scope.addQuery(cache.query, cache.getListener())
-    }
-
-    fun addScopedSubscription(firebaseReference: IFirebaseReference, scope: Query) {
-    }
-
-
-    fun addUnscopedSubscription(firebaseReference: IFirebaseReference) {
-        subscriptions.getOrPut(firebaseReference.querySpec) { firebaseReference }
     }
 
     fun addPagedListener(cache: FirebasePagedListQueryCache<*, *>, scope: Query, subQuery: Query = scope): Listener<out IFirebaseEntity> {

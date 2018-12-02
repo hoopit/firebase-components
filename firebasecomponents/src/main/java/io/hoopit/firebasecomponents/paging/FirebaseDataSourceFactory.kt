@@ -32,7 +32,9 @@ class FirebaseDataSourceFactory<Key : Comparable<Key>, Type : IFirebaseEntity>(
 
     override fun create(): DataSource<Pair<String, Key>, Type> {
         return FirebaseDataSource(keyFunction, store).also {
-            store.addInvalidationListener { it.invalidate() }
+            store.addInvalidationListener {
+                it.invalidate()
+            }
         }
     }
 
