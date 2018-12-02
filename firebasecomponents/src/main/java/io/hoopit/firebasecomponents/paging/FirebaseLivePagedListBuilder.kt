@@ -7,7 +7,7 @@ import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DatabaseError
 import io.hoopit.firebasecomponents.core.FirebaseChildEventListener
 import io.hoopit.firebasecomponents.core.IFirebaseEntity
-import io.hoopit.firebasecomponents.lifecycle.FirebaseManagedWrapperLiveData
+import io.hoopit.firebasecomponents.lifecycle.FirebaseCacheLiveData
 import kotlin.reflect.KClass
 
 @Suppress("unused")
@@ -20,7 +20,7 @@ class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, Remot
 
     private val listener = Listener(classModel, factory.store)
 
-    private val config = BoundaryCallbackConfig(listener, listener, listener)
+    private val config = BoundaryCallbackConfig(listener, null, listener)
 
     enum class FirebaseReferenceMode {
         LIVE,
@@ -45,9 +45,9 @@ class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, Remot
      * Builds the PagedList LiveData. Boundary callback is overwritten.
      */
     fun build(): LiveData<PagedList<LocalType>> {
-        val liveData = FirebaseManagedWrapperLiveData<PagedList<LocalType>>(
+        val liveData = FirebaseCacheLiveData<PagedList<LocalType>>(
+                factory.store,
                 factory.query,
-                factory.store.firebaseConnectionManager,
                 disconnectDelay
         )
         liveData.addSource(livePagedListBuilder.setBoundaryCallback(buildBoundaryCallback()).build()) {
@@ -60,11 +60,19 @@ class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, Remot
         return FirebaseManagedPagedListBoundaryCallback(
                 factory.query,
                 factory.keyFunction,
-                config.initialListener,
-                config.frontListener,
-                config.endListener,
-                factory.store.firebaseConnectionManager
+                factory.store.firebaseConnectionManager,
+                factory.store
         )
+    }
+
+    interface IFirebaseCallbackListener {
+
+        fun onMoved()
+
+        fun onAdded()
+
+        fun onRemoved()
+
     }
 
     class Listener<RemoteType : IFirebaseEntity>(

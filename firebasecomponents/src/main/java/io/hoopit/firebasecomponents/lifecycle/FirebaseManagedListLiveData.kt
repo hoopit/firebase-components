@@ -1,20 +1,20 @@
 package io.hoopit.firebasecomponents.lifecycle
 
 import com.google.firebase.database.Query
-import io.hoopit.firebasecomponents.core.FirebaseConnectionManager
+import io.hoopit.firebasecomponents.cache.FirebaseQueryCacheBase
 
 /**
- * [DelayedTransitionLiveData] that manages its connections through a FirebaseConnectionManager.
+ * [DelayedDisconnectLiveData] that manages its connections through a FirebaseConnectionManager.
  * Useful for resources that attach to multiple sub-queries.
- * It will manage connection and disconnection for all related sub-queries that have been
+ * It will manage connection and disconnection for itself and all related sub-queries that have been
  * added to the manager.
  */
-open class FirebaseManagedWrapperLiveData<Type>(
+open class FirebaseCacheLiveData<Type>(
+    private val cache: FirebaseQueryCacheBase<*, *>,
     private val query: Query,
-    private val firebaseConnectionManager: FirebaseConnectionManager,
     disconnectDelay: Long
-) : DelayedTransitionLiveData<Type>(disconnectDelay) {
-    final override fun delayedOnInactive() = firebaseConnectionManager.deactivate(query)
+) : DelayedDisconnectLiveData<Type>(disconnectDelay) {
+    final override fun delayedOnInactive() = cache.onInActive(this, query)
 
-    final override fun delayedOnActive() = firebaseConnectionManager.activate(query)
+    final override fun delayedOnActive() = cache.onActive(this, query)
 }

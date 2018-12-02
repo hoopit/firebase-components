@@ -7,7 +7,7 @@ import androidx.lifecycle.MediatorLiveData
 /**
  * A [MediatorLiveData] that delays it's transition to inactive state by a configurable amount.
  */
-abstract class DelayedTransitionLiveData<T>(private val disconnectDelay: Long) : MediatorLiveData<T>() {
+abstract class DelayedDisconnectLiveData<T>(private val disconnectDelay: Long) : MediatorLiveData<T>() {
 
     private val handler = Handler(Looper.getMainLooper())
 

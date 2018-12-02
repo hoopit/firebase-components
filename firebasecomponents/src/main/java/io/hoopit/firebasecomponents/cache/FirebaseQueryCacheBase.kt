@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import com.google.firebase.database.Query
 import io.hoopit.firebasecomponents.core.FirebaseCollection
 import io.hoopit.firebasecomponents.core.IFirebaseEntity
+import io.hoopit.firebasecomponents.lifecycle.FirebaseCacheLiveData
 
 abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>(
     query: Query,
@@ -49,4 +50,6 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>
     }
 
     protected abstract fun invalidate()
+    abstract fun onInActive(firebaseCacheLiveData: FirebaseCacheLiveData<*>, query: Query)
+    abstract fun onActive(firebaseCacheLiveData: FirebaseCacheLiveData<*>, query: Query)
 }

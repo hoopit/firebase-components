@@ -12,7 +12,7 @@ class FirebaseListLiveData<K : Comparable<K>, T : IFirebaseEntity>(
     private val classModel: KClass<out T>,
     private val collection: FirebaseCollection<K, T>,
     disconnectDelay: Long = 2000
-) : DelayedTransitionLiveData<List<T>>(disconnectDelay) {
+) : DelayedDisconnectLiveData<List<T>>(disconnectDelay) {
 
     constructor(
         query: Query,

@@ -1,9 +1,9 @@
 package io.hoopit.firebasecomponents.paging
 
 import androidx.paging.PagedList
-import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.Query
 import io.hoopit.firebasecomponents.core.FirebaseConnectionManager
+import timber.log.Timber
 
 /***
  * [PagedList.BoundaryCallback] for Firebase list resources
@@ -65,23 +65,64 @@ abstract class FirebasePagedListBoundaryCallback<LocalType, Key>(
 class FirebaseManagedPagedListBoundaryCallback<LocalType, Key>(
     query: Query,
     sortKey: (LocalType) -> Key,
-    private val initialListener: ChildEventListener?,
-    private val frontListener: ChildEventListener?,
-    private val endListener: ChildEventListener?,
-    private val firebaseConnectionManager: FirebaseConnectionManager
+    private val firebaseConnectionManager: FirebaseConnectionManager,
+    private val store: FirebasePagedListQueryCache<*, *>
+        // TODO: Consider passing cache as argument, and use it to add listeners
 ) : FirebasePagedListBoundaryCallback<LocalType, Key>(query, sortKey) {
+
+    private val limit = query.spec.params.limit
+
+    private val lock = Any()
+
+    private var initialListener: Listener<*>? = null
+    private var frontListener: Listener<*>? = null
+    private var endListener: Listener<*>? = null
+
+    private fun isInitialComplete(): Boolean {
+        return initialListener?.count == limit
+    }
+
+    private fun canAddFront(): Boolean {
+        return isInitialComplete() && (frontListener == null || frontListener?.count == limit)
+    }
+
+    private fun canAddEnd(): Boolean {
+        return isInitialComplete() && (endListener == null || endListener?.count == limit)
+    }
+
+    // TODO: add callback to disallow new listeners until current has fetched limit number of items
     override fun addInitialListener(query: Query) {
-        if (initialListener == null) return
-        firebaseConnectionManager.addListener(query, initialListener)
+        synchronized(lock) {
+            if (initialListener == null || isInitialComplete()) {
+                Timber.d("Adding initial listener for ${query.spec}")
+                initialListener = firebaseConnectionManager.addPagedListener(store, query)
+            } else {
+                Timber.d("Denied initial listener for ${query.spec}")
+                assert(false)
+            }
+        }
     }
 
     override fun addFrontListener(query: Query, subQuery: Query) {
-        if (frontListener == null) return
-        firebaseConnectionManager.addListener(query, subQuery, frontListener)
+        synchronized(lock) {
+            if (canAddFront()) {
+                Timber.d("Adding front listener for ${query.spec}")
+                frontListener = firebaseConnectionManager.addPagedListener(store, query, subQuery)
+            } else {
+                Timber.d("Denied front listener for ${query.spec}")
+            }
+        }
     }
 
     override fun addEndListener(query: Query, subQuery: Query) {
-        if (endListener == null) return
-        firebaseConnectionManager.addListener(query, subQuery, endListener)
+        synchronized(lock) {
+            if (canAddEnd()) {
+                Timber.d("Adding end listener for ${query.spec}")
+                endListener = firebaseConnectionManager.addPagedListener(store, query, subQuery)
+            } else {
+                Timber.d("Denied end listener for ${query.spec}")
+            }
+        }
     }
 }
+

@@ -1,55 +1,34 @@
 package io.hoopit.firebasecomponents.cache
 
 import androidx.lifecycle.LiveData
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.Query
-import io.hoopit.firebasecomponents.core.FirebaseChildEventListener
 import io.hoopit.firebasecomponents.core.FirebaseConnectionManager
 import io.hoopit.firebasecomponents.core.IFirebaseEntity
-import io.hoopit.firebasecomponents.lifecycle.FirebaseManagedWrapperLiveData
+import io.hoopit.firebasecomponents.lifecycle.FirebaseCacheLiveData
+import io.hoopit.firebasecomponents.paging.Listener
 import kotlin.reflect.KClass
 
 class FirebaseListQueryCache<K : Comparable<K>, T : IFirebaseEntity>(
-    query: Query,
-    classModel: KClass<T>,
+    private val connectionManager: FirebaseConnectionManager,
+    val query: Query,
+    private val classModel: KClass<T>,
     disconnectDelay: Long,
-    connectionManager: FirebaseConnectionManager,
     orderKeyFunction: (T) -> K
 ) : FirebaseQueryCacheBase<K, T>(query, orderKeyFunction) {
 
-    private val listener = object : FirebaseChildEventListener<T>(classModel = classModel) {
-
-        override fun cancelled(error: DatabaseError) {
-            TODO("not implemented")
-        }
-
-        override fun childMoved(previousChildName: String?, child: T) {
-            TODO("not implemented")
-        }
-
-        override fun childChanged(previousChildName: String?, child: T) {
-            collection.update(previousChildName, child)
-            invalidate()
-        }
-
-        override fun childAdded(previousChildName: String?, child: T) {
-            collection.addAfter(previousChildName, child)
-            invalidate()
-        }
-
-        override fun childRemoved(child: T) {
-            collection.remove(child)
-            invalidate()
-        }
+    override fun onInActive(firebaseCacheLiveData: FirebaseCacheLiveData<*>, query: Query) {
+        connectionManager.deactivate(query)
     }
 
-    init {
-        connectionManager.addListener(query, listener)
+    override fun onActive(firebaseCacheLiveData: FirebaseCacheLiveData<*>, query: Query) {
+        connectionManager.activate(query)
     }
 
-    // TODO: Maybe use a simpler/faster backing collection type?
+    fun getListener(): Listener<T> {
+        return Listener(classModel, this)
+    }
 
-    private val liveData = FirebaseManagedWrapperLiveData<List<T>>(query, connectionManager, disconnectDelay)
+    private val liveData = FirebaseCacheLiveData<List<T>>(this, query, disconnectDelay)
 
     fun getLiveData(): LiveData<List<T>> {
         return liveData

@@ -18,19 +18,25 @@ abstract class FirebaseDaoBase<K : Comparable<K>, V : IFirebaseEntity>(
     private val listCacheMap = mutableMapOf<Query, FirebaseListQueryCache<K, V>>()
 
     protected fun getPagedQueryCache(query: Query, sortedKeyFunction: (V) -> K): FirebasePagedListQueryCache<K, V> {
-        return pagedCacheMap.getOrPut(query) { FirebasePagedListQueryCache(firebaseConnectionManager, query, sortedKeyFunction) }
-    }
-
-    protected fun getListQueryCache(query: Query, sortedKeyFunction: (V) -> K): FirebaseListQueryCache<K, V> {
-        return listCacheMap.getOrPut(query) {
-            firebaseConnectionManager.getOrCreateCache(
+        return pagedCacheMap.getOrPut(query) {
+            firebaseConnectionManager.getOrCreatePagedCache(
                     query,
                     classModel,
                     disconnectDelay,
                     sortedKeyFunction
             )
         }
+    }
 
+    protected fun getListQueryCache(query: Query, sortedKeyFunction: (V) -> K): FirebaseListQueryCache<K, V> {
+        return listCacheMap.getOrPut(query) {
+            firebaseConnectionManager.getOrCreateListCache(
+                    query,
+                    classModel,
+                    disconnectDelay,
+                    sortedKeyFunction
+            )
+        }
     }
 
     protected fun createList(query: Query, sortedKeyFunction: (V) -> K): LiveData<List<V>> {

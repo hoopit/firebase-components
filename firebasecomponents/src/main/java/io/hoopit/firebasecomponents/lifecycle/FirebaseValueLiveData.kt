@@ -10,7 +10,7 @@ class FirebaseValueLiveData<T : Any>(
     private val reference: DatabaseReference,
     private val classModel: KClass<T>,
     disconnectDelay: Long = 2000
-) : DelayedTransitionLiveData<T>(disconnectDelay), ValueEventListener {
+) : DelayedDisconnectLiveData<T>(disconnectDelay), ValueEventListener {
     override fun delayedOnActive() {
         reference.addValueEventListener(this)
     }

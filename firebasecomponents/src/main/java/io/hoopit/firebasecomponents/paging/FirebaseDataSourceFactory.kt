@@ -11,7 +11,7 @@ abstract class IFirebaseDataSourceFactory<Key : Comparable<Key>, StoreType : IFi
     abstract val keyFunction: (MappingType) -> Key
 }
 
-open class FirebaseDataSourceFactory<Key : Comparable<Key>, Type : IFirebaseEntity>(
+class FirebaseDataSourceFactory<Key : Comparable<Key>, Type : IFirebaseEntity>(
     override val store: FirebasePagedListQueryCache<Key, Type>,
     override val query: Query,
     override val keyFunction: (Type) -> Key
@@ -31,9 +31,9 @@ open class FirebaseDataSourceFactory<Key : Comparable<Key>, Type : IFirebaseEnti
     }
 
     override fun create(): DataSource<Pair<String, Key>, Type> {
-        val source = FirebaseDataSource(keyFunction, store)
-        store.addInvalidationListener { source.invalidate() }
-        return source
+        return FirebaseDataSource(keyFunction, store).also {
+            store.addInvalidationListener { it.invalidate() }
+        }
     }
 
     @Suppress("unused")
