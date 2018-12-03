@@ -7,7 +7,6 @@ import androidx.lifecycle.MutableLiveData
 import com.google.firebase.database.Query
 import io.hoopit.firebasecomponents.core.FirebaseCollection
 import io.hoopit.firebasecomponents.core.IFirebaseEntity
-import io.hoopit.firebasecomponents.lifecycle.FirebaseCacheLiveData
 import timber.log.Timber
 
 abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>(
@@ -24,8 +23,6 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>
         invalidate()
     }
 
-
-    // TODO: prevent multiple caches for the same query
     protected val collection = FirebaseCollection(orderKeyFunction, query.spec.params.isViewFromLeft)
 
     val size: Int
@@ -37,25 +34,25 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>
 
     protected val items = mutableMapOf<K, MutableLiveData<Type>>()
 
-    fun insert(previousId: String?, item: Type) {
+    open fun insert(previousId: String?, item: Type) {
         collection.addAfter(previousId, item)
         items[orderKeyFunction(item)]?.postValue(item)
         dispatchInvalidate()
     }
 
-    fun update(previousId: String?, item: Type) {
+    open fun update(previousId: String?, item: Type) {
         collection.update(previousId, item)
         items[orderKeyFunction(item)]?.postValue(item)
         dispatchInvalidate()
     }
 
-    fun delete(item: Type) {
+    open fun delete(item: Type) {
         val removed = collection.remove(item)
         items[orderKeyFunction(item)]?.postValue(null)
         if (removed) dispatchInvalidate()
     }
 
-    fun get(it: K): Type? {
+    open fun get(it: K): Type? {
         return collection.get(it)
     }
 
@@ -81,6 +78,5 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>
     }
 
     protected abstract fun invalidate()
-    abstract fun onInActive(firebaseCacheLiveData: FirebaseCacheLiveData<*>, query: Query)
-    abstract fun onActive(firebaseCacheLiveData: FirebaseCacheLiveData<*>, query: Query)
+
 }

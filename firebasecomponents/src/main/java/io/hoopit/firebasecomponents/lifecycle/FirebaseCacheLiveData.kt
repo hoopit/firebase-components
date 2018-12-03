@@ -1,7 +1,7 @@
 package io.hoopit.firebasecomponents.lifecycle
 
 import com.google.firebase.database.Query
-import io.hoopit.firebasecomponents.cache.FirebaseQueryCacheBase
+import io.hoopit.firebasecomponents.cache.IManagedCache
 
 /**
  * [DelayedDisconnectLiveData] that manages its connections through a FirebaseConnectionManager.
@@ -10,10 +10,11 @@ import io.hoopit.firebasecomponents.cache.FirebaseQueryCacheBase
  * added to the manager.
  */
 open class FirebaseCacheLiveData<Type>(
-    private val cache: FirebaseQueryCacheBase<*, *>,
+    private val cache: IManagedCache,
     private val query: Query,
     disconnectDelay: Long
 ) : DelayedDisconnectLiveData<Type>(disconnectDelay) {
+
     final override fun delayedOnInactive() = cache.onInActive(this, query)
 
     final override fun delayedOnActive() = cache.onActive(this, query)

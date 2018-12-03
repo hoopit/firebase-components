@@ -15,7 +15,11 @@ interface IFirebaseEntity {
 
 
     }
+}
 
+abstract class ManagedFirebaseEntity : IFirebaseEntity {
+    lateinit var scope: Query
+    lateinit var scopeManager: ScopeManager
 }
 
 interface IFirebaseQuery {

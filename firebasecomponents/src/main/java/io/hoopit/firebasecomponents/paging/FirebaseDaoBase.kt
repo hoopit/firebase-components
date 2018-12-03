@@ -4,11 +4,11 @@ import androidx.lifecycle.LiveData
 import com.google.firebase.database.Query
 import io.hoopit.firebasecomponents.cache.FirebaseListQueryCache
 import io.hoopit.firebasecomponents.core.FirebaseConnectionManager
-import io.hoopit.firebasecomponents.core.IFirebaseEntity
+import io.hoopit.firebasecomponents.core.ManagedFirebaseEntity
 import io.hoopit.firebasecomponents.ext.liveData
 import kotlin.reflect.KClass
 
-abstract class FirebaseDaoBase<K : Comparable<K>, V : IFirebaseEntity>(
+abstract class FirebaseDaoBase<K : Comparable<K>, V : ManagedFirebaseEntity>(
     private val classModel: KClass<V>,
     private val disconnectDelay: Long,
     private val firebaseConnectionManager: FirebaseConnectionManager = FirebaseConnectionManager.defaultInstance

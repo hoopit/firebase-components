@@ -1,7 +1,7 @@
 package io.hoopit.firebasecomponents.paging
 
 import com.google.firebase.database.Query
-import io.hoopit.firebasecomponents.cache.FirebaseQueryCacheBase
+import io.hoopit.firebasecomponents.cache.FirebaseManagedQueryCache
 import io.hoopit.firebasecomponents.core.FirebaseConnectionManager
 import io.hoopit.firebasecomponents.core.IFirebaseEntity
 import io.hoopit.firebasecomponents.lifecycle.FirebaseCacheLiveData
@@ -9,10 +9,10 @@ import kotlin.reflect.KClass
 
 class FirebasePagedListQueryCache<K : Comparable<K>, Type : IFirebaseEntity>(
     val firebaseConnectionManager: FirebaseConnectionManager,
-    private val query: Query,
+    query: Query,
     private val classModel: KClass<Type>,
     orderKeyFunction: (Type) -> K
-) : FirebaseQueryCacheBase<K, Type>(query, orderKeyFunction) {
+) : FirebaseManagedQueryCache<K, Type>(firebaseConnectionManager, query, orderKeyFunction) {
 
     override fun onInActive(firebaseCacheLiveData: FirebaseCacheLiveData<*>, query: Query) {
         firebaseConnectionManager.deactivatePaging(this.query)
@@ -26,8 +26,8 @@ class FirebasePagedListQueryCache<K : Comparable<K>, Type : IFirebaseEntity>(
 
     private val dataSourceFactory = FirebaseDataSourceFactory(this, query, orderKeyFunction)
 
-    fun getListener(): Listener<Type> {
-        return Listener(classModel, this)
+    fun getListener(): QueryCacheListener<Type> {
+        return QueryCacheListener(classModel, this)
     }
 
     fun getDataSourceFactory(): FirebaseDataSourceFactory<K, Type> {

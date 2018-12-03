@@ -25,3 +25,4 @@ class FirebaseValueLiveData<T : Any>(
         value = snapshot.getValue(classModel.java)
     }
 }
+

@@ -83,9 +83,9 @@ class FirebaseManagedPagedListBoundaryCallback<LocalType, Key>(
 
     private val limit = query.spec.params.limit
 
-    private var initialListener: Listener<*>? = null
-    private var frontListener: Listener<*>? = null
-    private var endListener: Listener<*>? = null
+    private var initialListener: QueryCacheListener<*>? = null
+    private var frontListener: QueryCacheListener<*>? = null
+    private var endListener: QueryCacheListener<*>? = null
 
     private fun isInitialComplete(): Boolean {
         return initialListener?.getCount() == limit

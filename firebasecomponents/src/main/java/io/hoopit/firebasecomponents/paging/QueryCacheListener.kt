@@ -4,14 +4,13 @@ import com.google.firebase.database.DatabaseError
 import io.hoopit.firebasecomponents.cache.FirebaseQueryCacheBase
 import io.hoopit.firebasecomponents.core.FirebaseChildEventListener
 import io.hoopit.firebasecomponents.core.IFirebaseEntity
-import timber.log.Timber
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
-class Listener<RemoteType : IFirebaseEntity>(
-    classModel: KClass<RemoteType>,
-    private val store: FirebaseQueryCacheBase<*, RemoteType>
-) : FirebaseChildEventListener<RemoteType>(classModel) {
+class QueryCacheListener<RemoteType : IFirebaseEntity>(
+    clazz: KClass<RemoteType>,
+    private val cache: FirebaseQueryCacheBase<*, RemoteType>
+) : FirebaseChildEventListener<RemoteType>(clazz) {
 
     private val count = AtomicInteger()
 
@@ -24,18 +23,18 @@ class Listener<RemoteType : IFirebaseEntity>(
     }
 
     override fun childChanged(previousChildName: String?, child: RemoteType) {
-        store.update(previousChildName, child)
+        cache.update(previousChildName, child)
     }
 
     @Synchronized
     override fun childAdded(previousChildName: String?, child: RemoteType) {
-        store.insert(previousChildName, child)
+        cache.insert(previousChildName, child)
         count.incrementAndGet()
     }
 
     @Synchronized
     override fun childRemoved(child: RemoteType) {
-        store.delete(child)
+        cache.delete(child)
         count.decrementAndGet()
     }
 
@@ -43,6 +42,5 @@ class Listener<RemoteType : IFirebaseEntity>(
     fun getCount(): Int {
         return count.get()
     }
-
 
 }

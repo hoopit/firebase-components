@@ -8,7 +8,7 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.core.view.QuerySpec
 import io.hoopit.firebasecomponents.cache.FirebaseListQueryCache
 import io.hoopit.firebasecomponents.paging.FirebasePagedListQueryCache
-import io.hoopit.firebasecomponents.paging.Listener
+import io.hoopit.firebasecomponents.paging.QueryCacheListener
 import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
@@ -17,7 +17,7 @@ class CacheManager {
 
 }
 
-class ScopeManager(private val getSubscription: (Query) -> FirebaseConnectionManager.IFirebaseReference) {
+class ScopeManager(private val getSubscription: (Query) -> FirebaseConnectionManager.FirebaseReference) {
 
     private val scopes = ConcurrentHashMap<Query, SubscriptionScope>()
 
@@ -39,7 +39,8 @@ class ScopeManager(private val getSubscription: (Query) -> FirebaseConnectionMan
     inner class SubscriptionScope constructor(
         private val scope: Query
     ) {
-        private val listeners = ConcurrentHashMap<Query, MutableList<ChildEventListener>>()
+        private val childListeners = ConcurrentHashMap<Query, MutableList<ChildEventListener>>()
+        private val valueListeners = ConcurrentHashMap<Query, MutableList<ValueEventListener>>()
         private var active = false
 
 //        @Synchronized
@@ -52,7 +53,7 @@ class ScopeManager(private val getSubscription: (Query) -> FirebaseConnectionMan
             if (!active) {
                 Timber.d("Adding listeners for: ${scope.spec}")
                 active = true
-                for ((query, listeners) in listeners) {
+                for ((query, listeners) in childListeners) {
                     getSubscription(query).subscribe(query, *listeners.toTypedArray())
                     activate(query)
                 }
@@ -64,7 +65,7 @@ class ScopeManager(private val getSubscription: (Query) -> FirebaseConnectionMan
             if (active) {
                 Timber.d("Removing listeners for: ${scope.spec}")
                 active = false
-                for ((query, listeners) in listeners) {
+                for ((query, listeners) in childListeners) {
                     getSubscription(query).unsubscribe(query, *listeners.toTypedArray())
                     deactivate(query)
                 }
@@ -74,7 +75,16 @@ class ScopeManager(private val getSubscription: (Query) -> FirebaseConnectionMan
         @Synchronized
         fun addQuery(query: Query, listener: ChildEventListener) {
             Timber.d("called: addQuery: ${query.spec}")
-            listeners.getOrPut(query) { mutableListOf() }.add(listener).also {
+            childListeners.getOrPut(query) { mutableListOf() }.add(listener).also {
+                Timber.d("addQuery: activating listener immediately..")
+                if (active) getSubscription(query).subscribe(query, listener)
+            }
+        }
+
+        @Synchronized
+        fun addQuery(query: Query, listener: ValueEventListener) {
+            Timber.d("called: addQuery: ${query.spec}")
+            valueListeners.getOrPut(query) { mutableListOf() }.add(listener).also {
                 Timber.d("addQuery: activating listener immediately..")
                 if (active) getSubscription(query).subscribe(query, listener)
             }
@@ -91,16 +101,15 @@ class FirebaseConnectionManager {
     private val pagedListCache = mutableMapOf<QuerySpec, FirebasePagedListQueryCache<*, *>>()
     private val listCache = mutableMapOf<QuerySpec, FirebaseListQueryCache<*, *>>()
 
-    private val subscriptions = ConcurrentHashMap<QuerySpec, IFirebaseReference>()
+    private val subscriptions = ConcurrentHashMap<QuerySpec, FirebaseReference>()
 
     private val pagedListScopes = ScopeManager(::getSubscription)
     private val scopes = ScopeManager(::getSubscription)
+    val valueScopes = ScopeManager(::getSubscription)
 
-    private fun getSubscription(query: Query): IFirebaseReference {
+    private fun getSubscription(query: Query): FirebaseReference {
         return subscriptions.getOrPut(query.spec) { FirebaseReference(querySpec = query.spec) }
     }
-
-    // TODO: infinite depth sub queries
 
     fun activatePaging(query: Query) {
         pagedListScopes.activate(query)
@@ -131,7 +140,7 @@ class FirebaseConnectionManager {
         } as FirebasePagedListQueryCache<K, T>
     }
 
-    fun <K : Comparable<K>, T : IFirebaseEntity> getOrCreateListCache(
+    fun <K : Comparable<K>, T : ManagedFirebaseEntity> getOrCreateListCache(
         query: Query,
         classModel: KClass<T>,
         disconnectDelay: Long,
@@ -149,7 +158,7 @@ class FirebaseConnectionManager {
         return scope.addQuery(cache.query, cache.getListener())
     }
 
-    fun addPagedListener(cache: FirebasePagedListQueryCache<*, *>, scope: Query, subQuery: Query = scope): Listener<out IFirebaseEntity> {
+    fun addPagedListener(cache: FirebasePagedListQueryCache<*, *>, scope: Query, subQuery: Query = scope): QueryCacheListener<out IFirebaseEntity> {
         pagedListCache[scope.spec] = cache
         val listener = cache.getListener()
         pagedListScopes.getScope(scope).addQuery(subQuery, listener)
@@ -164,60 +173,89 @@ class FirebaseConnectionManager {
         TODO()
     }
 
-    interface IFirebaseReference {
-        fun subscribe(query: Query, vararg listeners: ChildEventListener)
-        fun unsubscribe(query: Query, vararg listeners: ChildEventListener)
-        val querySpec: QuerySpec
-    }
 
-    class FirebaseReference(override val querySpec: QuerySpec) : IFirebaseReference, ChildEventListener {
+    class FirebaseReference(private val querySpec: QuerySpec) {
 
-        override fun onCancelled(error: DatabaseError) {
-            subscribers.values.forEach { it.forEach { it.onCancelled(error) } }
-        }
+        // TODO: refactor
+        private val childEventSubs = mutableMapOf<Query, MutableList<ChildEventListener>>()
+        private var numChildEventSubs = 0
 
-        override fun onChildMoved(snapshot: DataSnapshot, previousChildKey: String?) {
-            subscribers.values.forEach { it.forEach { it.onChildMoved(snapshot, previousChildKey) } }
-        }
-
-        override fun onChildChanged(snapshot: DataSnapshot, previousChildKey: String?) {
-            subscribers.values.forEach { it.forEach { it.onChildChanged(snapshot, previousChildKey) } }
-        }
-
-        override fun onChildAdded(snapshot: DataSnapshot, previousChildKey: String?) {
-            subscribers.values.forEach { it.forEach { it.onChildAdded(snapshot, previousChildKey) } }
-        }
-
-        override fun onChildRemoved(snapshot: DataSnapshot) {
-            subscribers.values.forEach { it.forEach { it.onChildRemoved(snapshot) } }
-        }
-
-        private val subscribers = mutableMapOf<Query, MutableList<ChildEventListener>>()
-
-        private var subscriptions = 0
+        private val valueEventSubs = mutableMapOf<Query, MutableList<ValueEventListener>>()
+        private var numValueEventSubs = 0
 
         @Synchronized
-        override fun subscribe(query: Query, vararg listeners: ChildEventListener) {
+        fun subscribe(query: Query, vararg listeners: ChildEventListener) {
+            numChildEventSubs = subscribeInternal(query, childEventSubs, numChildEventSubs, *listeners) { query.addChildEventListener(childListener) }
+        }
+
+        @Synchronized
+        fun subscribe(query: Query, vararg listeners: ValueEventListener) {
+            // TODO: add support for Once values
+            numValueEventSubs = subscribeInternal(query, valueEventSubs, numValueEventSubs, *listeners) { query.addValueEventListener(valueListener) }
+        }
+
+        @Synchronized
+        fun unsubscribe(query: Query, vararg listeners: ValueEventListener) {
+            numValueEventSubs = unsubscribeInternal(query, valueEventSubs, numValueEventSubs, *listeners) { query.removeEventListener(valueListener) }
+        }
+
+        @Synchronized
+        fun unsubscribe(query: Query, vararg listeners: ChildEventListener) {
+            numChildEventSubs = unsubscribeInternal(query, childEventSubs, numChildEventSubs, *listeners) { query.removeEventListener(childListener) }
+        }
+
+        private inline fun <T> subscribeInternal(query: Query, map: MutableMap<Query, MutableList<T>>, count: Int, vararg listeners: T, activate: () -> Unit): Int {
             assert(querySpec == query.spec) { "Can not subscribe to a Query with different QuerySpec." }
-            assert(!subscribers.contains(query)) { "Adding multiple listeners on the same Query is not yet supported. Consider creating a new Query." }
-            val list = subscribers.getOrPut(query) { mutableListOf() }
+            assert(!map.contains(query)) { "Adding multiple listeners on the same Query is not yet supported. Consider creating a new Query." }
+            val list = map.getOrPut(query) { mutableListOf() }
             val added = list.addAll(listeners)
-            if (added && subscriptions == 0) query.addChildEventListener(this)
-            subscriptions += listeners.size
-
+            if (added && numChildEventSubs == 0) activate()
+            return count + listeners.size
         }
 
-        @Synchronized
-        override fun unsubscribe(query: Query, vararg listeners: ChildEventListener) {
+        private inline fun <T> unsubscribeInternal(query: Query, map: MutableMap<Query, MutableList<T>>, count: Int, vararg listeners: T, deactivate: () -> Unit): Int {
             assert(querySpec == query.spec) { "Can not unsubscribe from a Query with different QuerySpec." }
+            var newCount = count
             listeners.forEach {
-                val removed = subscribers[query]?.remove(it)
-                if (removed == true) --subscriptions
+                val removed = map[query]?.remove(it)
+                if (removed == true) --newCount
             }
-            if (subscriptions == 0) query.removeEventListener(this)
-            else if (subscriptions < 0) throw IllegalStateException("Attempting to unsub with 0 subs")
+            if (newCount == 0) query.removeEventListener(childListener)
+            else if (newCount < 0) throw IllegalStateException("Attempting to unsub with 0 subs")
+            return count - newCount
+        }
+
+        private val childListener = object : ChildEventListener {
+
+            override fun onCancelled(error: DatabaseError) {
+                childEventSubs.values.forEach { it.forEach { it.onCancelled(error) } }
+            }
+
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildKey: String?) {
+                childEventSubs.values.forEach { it.forEach { it.onChildMoved(snapshot, previousChildKey) } }
+            }
+
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildKey: String?) {
+                childEventSubs.values.forEach { it.forEach { it.onChildChanged(snapshot, previousChildKey) } }
+            }
+
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildKey: String?) {
+                childEventSubs.values.forEach { it.forEach { it.onChildAdded(snapshot, previousChildKey) } }
+            }
+
+            override fun onChildRemoved(snapshot: DataSnapshot) {
+                childEventSubs.values.forEach { it.forEach { it.onChildRemoved(snapshot) } }
+            }
+        }
+
+        private val valueListener = object : ValueEventListener {
+            override fun onCancelled(p0: DatabaseError) {
+                valueEventSubs.values.forEach { it.forEach { it.onCancelled(p0) } }
+            }
+
+            override fun onDataChange(p0: DataSnapshot) {
+                valueEventSubs.values.forEach { it.forEach { it.onDataChange(p0) } }
+            }
         }
     }
-
-
 }
