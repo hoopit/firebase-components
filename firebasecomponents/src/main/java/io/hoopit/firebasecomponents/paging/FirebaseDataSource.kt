@@ -1,9 +1,9 @@
 package io.hoopit.firebasecomponents.paging
 
 import androidx.paging.ItemKeyedDataSource
-import io.hoopit.firebasecomponents.core.IFirebaseEntity
+import io.hoopit.firebasecomponents.core.ManagedFirebaseEntity
 
-class FirebaseDataSource<Key : Comparable<Key>, StoreType : IFirebaseEntity>(
+class FirebaseDataSource<Key : Comparable<Key>, StoreType : ManagedFirebaseEntity>(
     private val keyFunction: (StoreType) -> Key,
     private val store: FirebasePagedListQueryCache<Key, StoreType>
 ) : ItemKeyedDataSource<Pair<String, Key>, StoreType>() {

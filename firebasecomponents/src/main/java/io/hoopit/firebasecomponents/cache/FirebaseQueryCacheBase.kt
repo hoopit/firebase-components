@@ -12,9 +12,17 @@ import timber.log.Timber
 abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>(
     private val query: Query,
     private val orderKeyFunction: (Type) -> K
-) {
+) : IManagedCache {
 
-    private val handler = Handler(Looper.getMainLooper())
+    override fun onInactive(firebaseCacheLiveData: LiveData<*>, query: Query) {
+//        scope.dispatchDeactivate()
+    }
+
+    override fun onActive(firebaseCacheLiveData: LiveData<*>, query: Query) {
+//        scope.dispatchActivate()
+    }
+
+    private val invalidationHandler = Handler(Looper.getMainLooper())
 
     private var pendingInvalidate = false
 
@@ -67,13 +75,13 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>
     }
 
     private fun dispatchInvalidate() {
-        handler.removeCallbacks(listener)
+        invalidationHandler.removeCallbacks(listener)
         if (query.spec.params.hasLimit() && collection.size == query.spec.params.limit) {
             // TODO: Dispatch immediately if requested initial size or page size is reached?
             Timber.d("dispatchInvalidate: Limit reached, invalidating immediately...")
             invalidate()
         } else {
-            handler.postDelayed(listener, 100)
+            invalidationHandler.postDelayed(listener, 100)
         }
     }
 

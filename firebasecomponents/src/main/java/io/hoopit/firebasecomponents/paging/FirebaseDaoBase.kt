@@ -3,23 +3,24 @@ package io.hoopit.firebasecomponents.paging
 import androidx.lifecycle.LiveData
 import com.google.firebase.database.Query
 import io.hoopit.firebasecomponents.cache.FirebaseListQueryCache
-import io.hoopit.firebasecomponents.core.FirebaseConnectionManager
+import io.hoopit.firebasecomponents.core.CacheManager
 import io.hoopit.firebasecomponents.core.ManagedFirebaseEntity
+import io.hoopit.firebasecomponents.core.Scope
 import io.hoopit.firebasecomponents.ext.liveData
 import kotlin.reflect.KClass
 
 abstract class FirebaseDaoBase<K : Comparable<K>, V : ManagedFirebaseEntity>(
     private val classModel: KClass<V>,
     private val disconnectDelay: Long,
-    private val firebaseConnectionManager: FirebaseConnectionManager = FirebaseConnectionManager.defaultInstance
+    private val cacheManager: CacheManager = Scope.defaultInstance.cacheManager
 ) {
 
     private val pagedCacheMap = mutableMapOf<Query, FirebasePagedListQueryCache<K, V>>()
     private val listCacheMap = mutableMapOf<Query, FirebaseListQueryCache<K, V>>()
 
-    protected fun getPagedQueryCache(query: Query, sortedKeyFunction: (V) -> K): FirebasePagedListQueryCache<K, V> {
+    private fun getPagedQueryCache(query: Query, sortedKeyFunction: (V) -> K): FirebasePagedListQueryCache<K, V> {
         return pagedCacheMap.getOrPut(query) {
-            firebaseConnectionManager.getOrCreatePagedCache(
+            cacheManager.getOrCreatePagedCache(
                     query,
                     classModel,
                     disconnectDelay,
@@ -28,9 +29,9 @@ abstract class FirebaseDaoBase<K : Comparable<K>, V : ManagedFirebaseEntity>(
         }
     }
 
-    protected fun getListQueryCache(query: Query, sortedKeyFunction: (V) -> K): FirebaseListQueryCache<K, V> {
+    private fun getListQueryCache(query: Query, sortedKeyFunction: (V) -> K): FirebaseListQueryCache<K, V> {
         return listCacheMap.getOrPut(query) {
-            firebaseConnectionManager.getOrCreateListCache(
+            cacheManager.getOrCreateListCache(
                     query,
                     classModel,
                     disconnectDelay,
@@ -48,6 +49,7 @@ abstract class FirebaseDaoBase<K : Comparable<K>, V : ManagedFirebaseEntity>(
     }
 
     protected fun getCachedItem(itemId: K): LiveData<V> {
+        // TODO: Improve
 //        return liveData(firebaseConnectionManager.getCachedItem(itemId, classModel))
         listCacheMap.values.forEach {
             val item = it.getLiveData(itemId)
@@ -61,7 +63,7 @@ abstract class FirebaseDaoBase<K : Comparable<K>, V : ManagedFirebaseEntity>(
     }
 
     protected fun getOrFetchItem(itemId: K, query: Query, cacheOnly: Boolean = true, sortedKeyFunction: (V) -> K): LiveData<V> {
-        TODO()
+        TODO("Not implemented.") // Use value cache
     }
 }
 

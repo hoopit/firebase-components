@@ -13,13 +13,12 @@ interface IFirebaseEntity {
 
         fun key(item: IFirebaseEntity) = item.entityId
 
-
     }
 }
 
 abstract class ManagedFirebaseEntity : IFirebaseEntity {
-    lateinit var scope: Query
-    lateinit var scopeManager: ScopeManager
+    lateinit var resource: Scope.Resource
+    lateinit var cache: CacheManager
 }
 
 interface IFirebaseQuery {

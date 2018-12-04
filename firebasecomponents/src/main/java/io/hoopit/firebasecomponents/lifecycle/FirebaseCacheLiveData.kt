@@ -1,21 +1,26 @@
 package io.hoopit.firebasecomponents.lifecycle
 
+import androidx.lifecycle.MediatorLiveData
 import com.google.firebase.database.Query
 import io.hoopit.firebasecomponents.cache.IManagedCache
+import io.hoopit.firebasecomponents.core.Scope
 
-/**
- * [DelayedDisconnectLiveData] that manages its connections through a FirebaseConnectionManager.
- * Useful for resources that attach to multiple sub-queries.
- * It will manage connection and disconnection for itself and all related sub-queries that have been
- * added to the manager.
- */
 open class FirebaseCacheLiveData<Type>(
-    private val cache: IManagedCache,
+    private val resource: Scope.Resource,
     private val query: Query,
-    disconnectDelay: Long
-) : DelayedDisconnectLiveData<Type>(disconnectDelay) {
+    private val cache: IManagedCache?
+) : MediatorLiveData<Type>() {
 
-    final override fun delayedOnInactive() = cache.onInActive(this, query)
+    override fun onInactive() {
+        super.onInactive()
+        cache?.onInactive(this, query)
+        resource.dispatchDeactivate()
 
-    final override fun delayedOnActive() = cache.onActive(this, query)
+    }
+
+    override fun onActive() {
+        super.onActive()
+        cache?.onActive(this, query)
+        resource.dispatchActivate()
+    }
 }

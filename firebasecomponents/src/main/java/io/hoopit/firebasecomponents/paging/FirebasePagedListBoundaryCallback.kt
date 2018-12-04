@@ -2,7 +2,7 @@ package io.hoopit.firebasecomponents.paging
 
 import androidx.paging.PagedList
 import com.google.firebase.database.Query
-import io.hoopit.firebasecomponents.core.FirebaseConnectionManager
+import io.hoopit.firebasecomponents.core.Scope
 import timber.log.Timber
 
 /***
@@ -76,10 +76,10 @@ abstract class FirebasePagedListBoundaryCallback<LocalType, Key>(
 class FirebaseManagedPagedListBoundaryCallback<LocalType, Key>(
     query: Query,
     sortKey: (LocalType) -> Key,
-    private val firebaseConnectionManager: FirebaseConnectionManager,
-    private val store: FirebasePagedListQueryCache<*, *>,
+    private val cache: FirebasePagedListQueryCache<*, *>,
+    private val resource: Scope.Resource,
     private val pagedListConfig: PagedList.Config
-) : FirebasePagedListBoundaryCallback<LocalType, Key>(query, sortKey) {
+) : FirebasePagedListBoundaryCallback<LocalType, Key>(cache.query, sortKey) {
 
     private val limit = query.spec.params.limit
 
@@ -99,12 +99,13 @@ class FirebaseManagedPagedListBoundaryCallback<LocalType, Key>(
         return isInitialComplete() && (endListener == null || endListener?.getCount() == limit)
     }
 
-    // TODO: add callback to disallow new listeners until current has fetched limit number of items
     @Synchronized
     override fun addInitialListener(query: Query) {
         if (initialListener == null || isInitialComplete()) {
             Timber.d("Adding initial listener for ${query.spec}")
-            initialListener = firebaseConnectionManager.addPagedListener(store, query)
+            val listener = cache.getListener()
+            resource.addSubQuery(query, listener)
+            frontListener = listener
         } else {
             Timber.d("Denied initial listener for ${query.spec}")
             assert(false)
@@ -115,7 +116,9 @@ class FirebaseManagedPagedListBoundaryCallback<LocalType, Key>(
     override fun addFrontListener(query: Query, subQuery: Query) {
         if (canAddFront()) {
             Timber.d("Adding front listener for ${subQuery.spec}")
-            frontListener = firebaseConnectionManager.addPagedListener(store, query, subQuery)
+            val listener = cache.getListener()
+            resource.addSubQuery(subQuery, listener)
+            frontListener = listener
         } else {
             Timber.d("Denied front listener for ${subQuery.spec}")
         }
@@ -123,10 +126,11 @@ class FirebaseManagedPagedListBoundaryCallback<LocalType, Key>(
 
     @Synchronized
     override fun addEndListener(query: Query, subQuery: Query) {
-        //  TODO: Check that the items have actually been loaded, and get the real next ID from the listener
         if (canAddEnd()) {
             Timber.d("Adding end listener for ${subQuery.spec}")
-            endListener = firebaseConnectionManager.addPagedListener(store, query, subQuery)
+            val listener = cache.getListener()
+            resource.addSubQuery(subQuery, listener)
+            frontListener = listener
         } else {
             Timber.d("Denied end listener for ${subQuery.spec}")
         }
