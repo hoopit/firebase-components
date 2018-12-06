@@ -8,13 +8,14 @@ import io.hoopit.firebasecomponents.core.Scope
 open class FirebaseCacheLiveData<Type>(
     private val resource: Scope.Resource,
     private val query: Query,
-    private val cache: IManagedCache?
+    private val cache: IManagedCache?,
+    private val disconnectDelay: Long
 ) : MediatorLiveData<Type>() {
 
     override fun onInactive() {
         super.onInactive()
         cache?.onInactive(this, query)
-        resource.dispatchDeactivate()
+        resource.dispatchDeactivate(disconnectDelay)
 
     }
 

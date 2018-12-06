@@ -2,22 +2,22 @@ package io.hoopit.firebasecomponents.paging
 
 import androidx.paging.DataSource
 import com.google.firebase.database.Query
-import io.hoopit.firebasecomponents.core.ManagedFirebaseEntity
+import io.hoopit.firebasecomponents.core.FirebaseResource
 
-abstract class IFirebaseDataSourceFactory<Key : Comparable<Key>, StoreType : ManagedFirebaseEntity, MappingType : Any> :
+abstract class IFirebaseDataSourceFactory<Key : Comparable<Key>, StoreType : FirebaseResource, MappingType : Any> :
         DataSource.Factory<Pair<String, Key>, MappingType>() {
     abstract val cache: FirebasePagedListQueryCache<Key, StoreType>
     abstract val query: Query
     abstract val keyFunction: (MappingType) -> Key
 }
 
-class FirebaseDataSourceFactory<Key : Comparable<Key>, Type : ManagedFirebaseEntity>(
+class FirebaseDataSourceFactory<Key : Comparable<Key>, Type : FirebaseResource>(
     override val cache: FirebasePagedListQueryCache<Key, Type>,
     override val query: Query,
     override val keyFunction: (Type) -> Key
 ) : IFirebaseDataSourceFactory<Key, Type, Type>() {
 
-    class FirebaseDataSourceFactoryMapper<Key : Comparable<Key>, RemoteType : ManagedFirebaseEntity, MappingType : Any>(
+    class FirebaseDataSourceFactoryMapper<Key : Comparable<Key>, RemoteType : FirebaseResource, MappingType : Any>(
         private val dataSourceFactory: FirebaseDataSourceFactory<Key, RemoteType>,
         private val mapper: (RemoteType) -> MappingType,
         override val keyFunction: (MappingType) -> Key

@@ -12,23 +12,23 @@ class Scope(
     private val referenceManager: FirebaseReferenceManager
 ) {
 
-    lateinit var cacheManager: CacheManager
+    lateinit var cache: FirebaseCache
 
     companion object {
-        val defaultInstance = Scope(FirebaseReferenceManager()).also { it.cacheManager = CacheManager(it) }
+        val defaultInstance = Scope(FirebaseReferenceManager()).also { it.cache = FirebaseCache(it) }
     }
 
     private val scopes = ConcurrentHashMap<Query, Resource>()
 
 
     @Synchronized
-    fun getScope(query: Query, defaultDisconnectDelay: Long = 10000): Resource {
+    fun getResource(query: Query, defaultDisconnectDelay: Long = 10000): Resource {
         return scopes.getOrPut(query) { Resource(query, defaultDisconnectDelay) }
     }
 
     @Synchronized
     fun activate(query: Query) {
-        getScope(query).dispatchActivate()
+        getResource(query).dispatchActivate()
     }
 
     @Synchronized
@@ -38,7 +38,7 @@ class Scope(
     }
 
     inner class Resource constructor(
-        private val rootQuery: Query,
+        val rootQuery: Query,
         private val disconnectDelay: Long
     ) {
         private val childListeners = ConcurrentHashMap<Query, MutableList<ChildEventListener>>()
@@ -56,12 +56,14 @@ class Scope(
             pendingRemoval = false
         }
 
+        @Synchronized
         fun dispatchActivate() {
             handler.removeCallbacks(listener)
             if (!pendingRemoval) activate()
             pendingRemoval = false
         }
 
+        @Synchronized
         fun dispatchDeactivate(disconnectDelay: Long = this.disconnectDelay) {
             if (disconnectDelay > 0) {
                 pendingRemoval = true
@@ -75,9 +77,13 @@ class Scope(
         @Synchronized
         private fun activate() {
             if (!active) {
-                Timber.d("Adding listeners for: ${rootQuery.spec}")
+//                Timber.d("Adding listeners for: ${rootQuery.spec}")
                 active = true
                 for ((query, listeners) in childListeners) {
+                    referenceManager.getSubscription(query).subscribe(query, *listeners.toTypedArray())
+                    activate(query)
+                }
+                for ((query, listeners) in valueListeners) {
                     referenceManager.getSubscription(query).subscribe(query, *listeners.toTypedArray())
                     activate(query)
                 }
@@ -87,9 +93,13 @@ class Scope(
         @Synchronized
         private fun deactivate() {
             if (active) {
-                Timber.d("Removing listeners for: ${rootQuery.spec}")
+//                Timber.d("Removing listeners for: ${rootQuery.spec}")
                 active = false
                 for ((query, listeners) in childListeners) {
+                    referenceManager.getSubscription(query).unsubscribe(query, *listeners.toTypedArray())
+                    deactivate(query)
+                }
+                for ((query, listeners) in valueListeners) {
                     referenceManager.getSubscription(query).unsubscribe(query, *listeners.toTypedArray())
                     deactivate(query)
                 }
@@ -100,8 +110,11 @@ class Scope(
         fun addSubQuery(query: Query, listener: ChildEventListener) {
             Timber.d("called: addQuery: ${query.spec}")
             childListeners.getOrPut(query) { mutableListOf() }.add(listener).also {
-                Timber.d("addQuery: activating listener immediately..")
-                if (active) referenceManager.getSubscription(query).subscribe(query, listener)
+                if (active) {
+                    Timber.d("addQuery: activating listener immediately..")
+                    referenceManager.getSubscription(query).subscribe(query, listener)
+                    activate(query)
+                }
             }
         }
 
@@ -109,17 +122,18 @@ class Scope(
         fun addSubQuery(query: Query, listener: ValueEventListener) {
             Timber.d("called: addQuery: ${query.spec}")
             valueListeners.getOrPut(query) { mutableListOf() }.add(listener).also {
-                Timber.d("addQuery: activating listener immediately..")
-                if (active) referenceManager.getSubscription(query).subscribe(query, listener)
+                if (active) {
+                    Timber.d("addQuery: activating listener immediately..")
+                    referenceManager.getSubscription(query).subscribe(query, listener)
+                    activate(query)
+                }
             }
         }
 
-        @Synchronized
         fun addListener(listener: ChildEventListener) {
             addSubQuery(rootQuery, listener)
         }
 
-        @Synchronized
         fun addListener(listener: ValueEventListener) {
             addSubQuery(rootQuery, listener)
         }

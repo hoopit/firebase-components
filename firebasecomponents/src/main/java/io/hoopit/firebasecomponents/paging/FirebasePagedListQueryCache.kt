@@ -2,11 +2,11 @@ package io.hoopit.firebasecomponents.paging
 
 import com.google.firebase.database.Query
 import io.hoopit.firebasecomponents.cache.FirebaseManagedQueryCache
-import io.hoopit.firebasecomponents.core.ManagedFirebaseEntity
+import io.hoopit.firebasecomponents.core.FirebaseResource
 import io.hoopit.firebasecomponents.core.Scope
 import kotlin.reflect.KClass
 
-class FirebasePagedListQueryCache<K : Comparable<K>, Type : ManagedFirebaseEntity>(
+class FirebasePagedListQueryCache<K : Comparable<K>, Type : FirebaseResource>(
     val scope: Scope,
     query: Query,
     clazz: KClass<Type>,

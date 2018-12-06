@@ -7,8 +7,8 @@ import io.hoopit.firebasecomponents.cache.FirebaseValueCache
 import io.hoopit.firebasecomponents.paging.FirebasePagedListQueryCache
 import kotlin.reflect.KClass
 
-class CacheManager(
-    private val scopes: Scope
+class FirebaseCache(
+    private val scope: Scope
 ) {
 
     private val valueCaches = mutableMapOf<KClass<*>, FirebaseValueCache<*>>()
@@ -18,38 +18,36 @@ class CacheManager(
     fun <T : Any> getCache(clazz: KClass<T>): FirebaseValueCache<T> {
         @Suppress("UNCHECKED_CAST")
         return valueCaches.getOrPut(clazz) {
-            FirebaseValueCache(scopes, clazz)
+            FirebaseValueCache(scope, clazz)
         } as FirebaseValueCache<T>
     }
 
-    fun <K : Comparable<K>, T : ManagedFirebaseEntity> getOrCreatePagedCache(
+    fun <K : Comparable<K>, T : FirebaseResource> getOrCreatePagedCache(
         query: Query,
         classModel: KClass<T>,
-        disconnectDelay: Long,
         orderByKey: (T) -> K
     ): FirebasePagedListQueryCache<K, T> {
         // TODO: consider attaching initial listener immediately
         @Suppress("UNCHECKED_CAST")
         return pagedListCache.getOrPut(query.spec) {
-            FirebasePagedListQueryCache(scopes, query, classModel, orderByKey)
+            FirebasePagedListQueryCache(scope, query, classModel, orderByKey)
         } as FirebasePagedListQueryCache<K, T>
     }
 
-    fun <K : Comparable<K>, T : ManagedFirebaseEntity> getOrCreateListCache(
+    fun <K : Comparable<K>, T : FirebaseResource> getOrCreateListCache(
         query: Query,
-        classModel: KClass<T>,
-        disconnectDelay: Long,
+        clazz: KClass<T>,
         orderByKey: (T) -> K
     ): FirebaseListQueryCache<K, T> {
         @Suppress("UNCHECKED_CAST")
         return listCache.getOrElse(query.spec) {
-            FirebaseListQueryCache(scopes, query, classModel, orderByKey)
+            FirebaseListQueryCache(scope, query, clazz, orderByKey)
         }.also { registerListQueryCache(it, query) } as FirebaseListQueryCache<K, T>
     }
 
     fun registerListQueryCache(cache: FirebaseListQueryCache<*, *>, query: Query) {
         listCache.getOrPut(query.spec) { cache }
-        val scope = scopes.getScope(cache.query)
+        val scope = scope.getResource(cache.query)
         return scope.addListener(cache.getListener())
     }
 }

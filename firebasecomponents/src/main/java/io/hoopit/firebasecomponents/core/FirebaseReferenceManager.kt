@@ -6,6 +6,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.core.view.QuerySpec
+import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 
 class FirebaseReferenceManager {
@@ -38,6 +39,7 @@ class FirebaseReferenceManager {
         @Synchronized
         fun subscribe(query: Query, vararg listeners: ValueEventListener) {
             // TODO: add support for Once values
+            Timber.d("called: subscribe: ${query.spec}")
             numValueEventSubs = subscribeInternal(query, valueEventSubs, numValueEventSubs, *listeners) { query.addValueEventListener(valueListener) }
         }
 
@@ -56,7 +58,10 @@ class FirebaseReferenceManager {
             assert(!map.contains(query)) { "Adding multiple listeners on the same Query is not yet supported. Consider creating a new Query." }
             val list = map.getOrPut(query) { mutableListOf() }
             val added = list.addAll(listeners)
-            if (added && numChildEventSubs == 0) activate()
+            if (added && numChildEventSubs == 0) {
+                Timber.d("called: subscribeInternal: activating: $querySpec")
+                activate()
+            }
             return count + listeners.size
         }
 
@@ -67,8 +72,10 @@ class FirebaseReferenceManager {
                 val removed = map[query]?.remove(it)
                 if (removed == true) --newCount
             }
-            if (newCount == 0) query.removeEventListener(childListener)
-            else if (newCount < 0) throw IllegalStateException("Attempting to unsub with 0 subs")
+            if (newCount == 0) {
+                Timber.d("called: unsubscribeInternal: deactivating: $querySpec")
+                deactivate()
+            } else if (newCount < 0) throw IllegalStateException("Attempting to unsub with 0 subs")
             return count - newCount
         }
 

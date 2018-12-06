@@ -9,16 +9,17 @@ import com.google.firebase.database.Query
 interface IFirebaseEntity {
     var entityId: String
 
-    object orderBy {
+    object OrderBy {
 
         fun key(item: IFirebaseEntity) = item.entityId
 
     }
 }
 
-abstract class ManagedFirebaseEntity : IFirebaseEntity {
-    lateinit var resource: Scope.Resource
-    lateinit var cache: CacheManager
+abstract class FirebaseResource(val disconnectDelay: Long) : IFirebaseEntity {
+    override lateinit var entityId: String
+    lateinit var scope: Scope
+    lateinit var query: Query
 }
 
 interface IFirebaseQuery {

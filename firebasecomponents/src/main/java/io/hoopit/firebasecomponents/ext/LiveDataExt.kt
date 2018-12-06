@@ -9,7 +9,7 @@ fun <T> noLiveData(): LiveData<T> {
     return MutableLiveData<T>()
 }
 
-fun <T> liveData(singleValue: T?): LiveData<T> {
+fun <T> liveData(singleValue: T?): LiveData<T?> {
     return MutableLiveData<T>().apply {
         postValue(singleValue)
     }
@@ -28,8 +28,9 @@ fun <IN, OUT> LiveData<IN>.map(mapFunction: (IN) -> OUT): LiveData<OUT> {
 /**
  * Extension wrapper for [Transformations.switchMap]
  */
-fun <X, Y> LiveData<X>.switchMap(func: (X) -> LiveData<Y>?): LiveData<Y> =
-        Transformations.switchMap(this, func)
+fun <X, Y> LiveData<X>.switchMap(func: (X) -> LiveData<Y>): LiveData<Y> {
+    return Transformations.switchMap(this, func)
+}
 
 
 /**

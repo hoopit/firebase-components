@@ -7,13 +7,13 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.core.view.QuerySpec
-import io.hoopit.firebasecomponents.core.ManagedFirebaseEntity
+import io.hoopit.firebasecomponents.core.FirebaseResource
 import io.hoopit.firebasecomponents.core.Scope
 import io.hoopit.firebasecomponents.lifecycle.FirebaseCacheLiveData
 import io.hoopit.firebasecomponents.paging.QueryCacheListener
 import kotlin.reflect.KClass
 
-abstract class FirebaseManagedQueryCache<K : Comparable<K>, Type : ManagedFirebaseEntity>(
+abstract class FirebaseManagedQueryCache<K : Comparable<K>, Type : FirebaseResource>(
     private val scope: Scope,
     val query: Query,
     private val clazz: KClass<Type>,
@@ -21,20 +21,20 @@ abstract class FirebaseManagedQueryCache<K : Comparable<K>, Type : ManagedFireba
 ) : FirebaseQueryCacheBase<K, Type>(query, orderKeyFunction) {
 
     override fun insert(previousId: String?, item: Type) {
-        item.resource = scope.getScope(query)
-        item.cache = scope.cacheManager
+        item.scope = scope
+        item.query = query
         super.insert(previousId, item)
     }
 
     override fun update(previousId: String?, item: Type) {
-        item.resource = scope.getScope(query)
-        item.cache = scope.cacheManager
+        item.scope = scope
+        item.query = query
         super.update(previousId, item)
     }
 
     override fun delete(item: Type) {
-        item.resource = scope.getScope(query)
-        item.cache = scope.cacheManager
+        item.scope = scope
+        item.query = query
         super.delete(item)
     }
 
@@ -51,17 +51,17 @@ class FirebaseValueCache<Type : Any>(
     private val clazz: KClass<Type>
 ) : IManagedCache {
 
-    private val liveData = mutableMapOf<QuerySpec, LiveData<Type>>()
-    private val scopedLiveData = mutableMapOf<QuerySpec, LiveData<Type>>()
+    private val liveData = mutableMapOf<QuerySpec, LiveData<Type?>>()
 
     fun get(query: Query): Type? {
         return liveData[query.spec]?.value
     }
 
-    fun getLiveData(query: Query, resource: Scope.Resource = scope.getScope(query)): LiveData<Type> {
-        return scopedLiveData.getOrPut(query.spec) {
-            FirebaseCacheLiveData<Type>(resource, query, this).also {
-                resource.addListener(Listener(clazz, it))
+    fun getLiveData(query: Query, disconnectDelay: Long, resource: Scope.Resource = scope.getResource(query)): LiveData<Type?> {
+        return liveData.getOrPut(query.spec) {
+            FirebaseCacheLiveData<Type?>(resource, query, this, disconnectDelay).also {
+                if (resource.rootQuery == query)
+                    resource.addListener(Listener(clazz, it))
             }
         }
     }
@@ -70,36 +70,16 @@ class FirebaseValueCache<Type : Any>(
 
     override fun onActive(firebaseCacheLiveData: LiveData<*>, query: Query) {}
 
-    private class Listener<T : Any>(private val clazz: KClass<T>, private val liveData: MutableLiveData<T>) : ValueEventListener {
+    private class Listener<T : Any>(private val clazz: KClass<T>, private val liveData: MutableLiveData<T?>) : ValueEventListener {
 
         override fun onCancelled(p0: DatabaseError) {
             TODO("not implemented")
         }
 
         override fun onDataChange(snapshot: DataSnapshot) {
-            liveData.value = snapshot.getValue(clazz.java)
+            liveData.postValue(snapshot.getValue(clazz.java))
         }
 
     }
 }
 
-class FirebaseScopedValueLiveData<T : Any>(
-    query: Query,
-    resource: Scope.Resource,
-    private val clazz: KClass<T>,
-    cache: IManagedCache? = null
-) : FirebaseCacheLiveData<T>(resource, query, cache), ValueEventListener {
-
-    init {
-        resource.addListener(this)
-    }
-
-    override fun onCancelled(p0: DatabaseError) {
-        TODO("not implemented")
-    }
-
-    override fun onDataChange(snapshot: DataSnapshot) {
-        value = snapshot.getValue(clazz.java)
-    }
-
-}

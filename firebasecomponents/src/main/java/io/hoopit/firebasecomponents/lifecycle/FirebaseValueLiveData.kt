@@ -2,12 +2,12 @@ package io.hoopit.firebasecomponents.lifecycle
 
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
 import kotlin.reflect.KClass
 
 class FirebaseValueLiveData<T : Any>(
-    private val reference: DatabaseReference,
+    private val reference: Query,
     private val classModel: KClass<T>,
     disconnectDelay: Long = 2000
 ) : DelayedDisconnectLiveData<T>(disconnectDelay), ValueEventListener {

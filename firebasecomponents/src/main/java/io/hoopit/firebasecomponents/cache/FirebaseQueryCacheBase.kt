@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import com.google.firebase.database.Query
 import io.hoopit.firebasecomponents.core.FirebaseCollection
 import io.hoopit.firebasecomponents.core.IFirebaseEntity
+import io.hoopit.firebasecomponents.ext.liveData
 import timber.log.Timber
 
 abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>(
@@ -24,9 +25,9 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>
 
     private val invalidationHandler = Handler(Looper.getMainLooper())
 
-    private var pendingInvalidate = false
+    private var isInvalidatePending = false
 
-    private val listener = Runnable {
+    private val invalidationTask = Runnable {
         Timber.d("dispatchInvalidate: executing delayed invalidate")
         invalidate()
     }
@@ -64,24 +65,20 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>
         return collection.get(it)
     }
 
-    fun getLiveData(it: K): LiveData<Type>? {
+    fun getLiveData(it: K): LiveData<Type?> {
         return items.getOrPut(it) {
-            val liveData = MutableLiveData<Type>()
-            collection.get(it)?.let {
-                liveData.postValue(it)
-            }
-            liveData
+            return liveData(collection.get(it))
         }
     }
 
     private fun dispatchInvalidate() {
-        invalidationHandler.removeCallbacks(listener)
+        invalidationHandler.removeCallbacks(invalidationTask)
         if (query.spec.params.hasLimit() && collection.size == query.spec.params.limit) {
             // TODO: Dispatch immediately if requested initial size or page size is reached?
             Timber.d("dispatchInvalidate: Limit reached, invalidating immediately...")
             invalidate()
         } else {
-            invalidationHandler.postDelayed(listener, 100)
+            invalidationHandler.postDelayed(invalidationTask, 100)
         }
     }
 
