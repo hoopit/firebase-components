@@ -78,17 +78,17 @@ class FirebaseManagedPagedListBoundaryCallback<LocalType, Key>(
     sortKey: (LocalType) -> Key,
     private val cache: FirebasePagedListQueryCache<*, *>,
     private val resource: Scope.Resource,
-    private val pagedListConfig: PagedList.Config
+    private val pagedListConfig: PagedList.Config? = null
 ) : FirebasePagedListBoundaryCallback<LocalType, Key>(cache.query, sortKey) {
 
     private val limit = query.spec.params.limit
 
-    private var initialListener: QueryCacheListener<*>? = null
-    private var frontListener: QueryCacheListener<*>? = null
-    private var endListener: QueryCacheListener<*>? = null
+    private var initialListener: QueryCacheChildrenListener<*>? = null
+    private var frontListener: QueryCacheChildrenListener<*>? = null
+    private var endListener: QueryCacheChildrenListener<*>? = null
 
     private fun isInitialComplete(): Boolean {
-        return initialListener?.getCount() == limit
+        return initialListener == null || initialListener?.getCount() == limit
     }
 
     private fun canAddFront(): Boolean {
@@ -101,9 +101,9 @@ class FirebaseManagedPagedListBoundaryCallback<LocalType, Key>(
 
     @Synchronized
     override fun addInitialListener(query: Query) {
-        if (initialListener == null || isInitialComplete()) {
+        if (isInitialComplete()) {
             Timber.d("Adding initial listener for ${query.spec}")
-            val listener = cache.getListener()
+            val listener = cache.getChildListener()
             resource.addSubQuery(query, listener)
             frontListener = listener
         } else {
@@ -116,7 +116,7 @@ class FirebaseManagedPagedListBoundaryCallback<LocalType, Key>(
     override fun addFrontListener(query: Query, subQuery: Query) {
         if (canAddFront()) {
             Timber.d("Adding front listener for ${subQuery.spec}")
-            val listener = cache.getListener()
+            val listener = cache.getChildListener()
             resource.addSubQuery(subQuery, listener)
             frontListener = listener
         } else {
@@ -128,7 +128,7 @@ class FirebaseManagedPagedListBoundaryCallback<LocalType, Key>(
     override fun addEndListener(query: Query, subQuery: Query) {
         if (canAddEnd()) {
             Timber.d("Adding end listener for ${subQuery.spec}")
-            val listener = cache.getListener()
+            val listener = cache.getChildListener()
             resource.addSubQuery(subQuery, listener)
             frontListener = listener
         } else {
@@ -137,3 +137,66 @@ class FirebaseManagedPagedListBoundaryCallback<LocalType, Key>(
     }
 }
 
+class FirebaseSimplePagedListBoundaryCallback<LocalType, Key>(
+    query: Query,
+    sortKey: (LocalType) -> Key,
+    private val cache: FirebasePagedListQueryCache<*, *>,
+    private val resource: Scope.Resource,
+    private val pagedListConfig: PagedList.Config? = null
+) : FirebasePagedListBoundaryCallback<LocalType, Key>(cache.query, sortKey) {
+
+    private val limit = query.spec.params.limit
+
+    private var initialListener: IQueryCacheListener? = null
+    private var frontListener: IQueryCacheListener? = null
+    private var endListener: IQueryCacheListener? = null
+
+    private fun isInitialComplete(): Boolean {
+        return initialListener == null || initialListener?.getCount() == limit
+    }
+
+    private fun canAddFront(): Boolean {
+        return isInitialComplete() && (frontListener == null || frontListener?.getCount() == limit)
+    }
+
+    private fun canAddEnd(): Boolean {
+        return isInitialComplete() && (endListener == null || endListener?.getCount() == limit)
+    }
+
+    @Synchronized
+    override fun addInitialListener(query: Query) {
+        if (isInitialComplete()) {
+            Timber.d("Adding initial listener for ${query.spec}")
+            val listener = cache.getChildListener()
+            resource.addSubQuery(query, listener)
+            frontListener = listener
+        } else {
+            Timber.d("Denied initial listener for ${query.spec}")
+            assert(false)
+        }
+    }
+
+    @Synchronized
+    override fun addFrontListener(query: Query, subQuery: Query) {
+        if (canAddFront()) {
+            Timber.d("Adding front listener for ${subQuery.spec}")
+            val listener = cache.getValueListener()
+            resource.addSubQuery(subQuery, listener, true)
+            frontListener = listener
+        } else {
+            Timber.d("Denied front listener for ${subQuery.spec}")
+        }
+    }
+
+    @Synchronized
+    override fun addEndListener(query: Query, subQuery: Query) {
+        if (canAddEnd()) {
+            Timber.d("Adding end listener for ${subQuery.spec}")
+            val listener = cache.getValueListener()
+            resource.addSubQuery(subQuery, listener, true)
+            frontListener = listener
+        } else {
+            Timber.d("Denied end listener for ${subQuery.spec}")
+        }
+    }
+}

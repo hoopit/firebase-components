@@ -17,7 +17,7 @@ class FirebaseReferenceManager {
 
     private val references = ConcurrentHashMap<QuerySpec, FirebaseReference>()
 
-    fun getSubscription(query: Query): FirebaseReference {
+    fun getReference(query: Query): FirebaseReference {
         return references.getOrPut(query.spec) { FirebaseReference(querySpec = query.spec) }
     }
 
@@ -29,6 +29,7 @@ class FirebaseReferenceManager {
         private var numChildEventSubs = 0
 
         private val valueEventSubs = mutableMapOf<Query, MutableList<ValueEventListener>>()
+        private val singleValueEventSubs = mutableMapOf<Query, MutableList<ValueEventListener>>()
         private var numValueEventSubs = 0
 
         @Synchronized
@@ -38,14 +39,24 @@ class FirebaseReferenceManager {
 
         @Synchronized
         fun subscribe(query: Query, vararg listeners: ValueEventListener) {
-            // TODO: add support for Once values
             Timber.d("called: subscribe: ${query.spec}")
-            numValueEventSubs = subscribeInternal(query, valueEventSubs, numValueEventSubs, *listeners) { query.addValueEventListener(valueListener) }
+            numValueEventSubs = subscribeInternal(query, valueEventSubs, numValueEventSubs, *listeners) {
+                query.addValueEventListener(valueListener)
+            }
+        }
+
+        @Synchronized
+        fun subscribeSingle(query: Query, vararg listeners: ValueEventListener) {
+            Timber.d("called: subscribe: ${query.spec}")
+            numValueEventSubs = subscribeInternal(query, singleValueEventSubs, numValueEventSubs, *listeners) {
+                query.addValueEventListener(valueListener)
+            }
         }
 
         @Synchronized
         fun unsubscribe(query: Query, vararg listeners: ValueEventListener) {
             numValueEventSubs = unsubscribeInternal(query, valueEventSubs, numValueEventSubs, *listeners) { query.removeEventListener(valueListener) }
+            numValueEventSubs = unsubscribeInternal(query, singleValueEventSubs, numValueEventSubs, *listeners) { query.removeEventListener(valueListener) }
         }
 
         @Synchronized
@@ -53,16 +64,16 @@ class FirebaseReferenceManager {
             numChildEventSubs = unsubscribeInternal(query, childEventSubs, numChildEventSubs, *listeners) { query.removeEventListener(childListener) }
         }
 
-        private inline fun <T> subscribeInternal(query: Query, map: MutableMap<Query, MutableList<T>>, count: Int, vararg listeners: T, activate: () -> Unit): Int {
+        private inline fun <T> subscribeInternal(query: Query, map: MutableMap<Query, MutableList<T>>, currentSubs: Int, vararg listeners: T, activate: () -> Unit): Int {
             assert(querySpec == query.spec) { "Can not subscribe to a Query with different QuerySpec." }
             assert(!map.contains(query)) { "Adding multiple listeners on the same Query is not yet supported. Consider creating a new Query." }
             val list = map.getOrPut(query) { mutableListOf() }
             val added = list.addAll(listeners)
-            if (added && numChildEventSubs == 0) {
+            if (added && currentSubs == 0) {
                 Timber.d("called: subscribeInternal: activating: $querySpec")
                 activate()
             }
-            return count + listeners.size
+            return currentSubs + listeners.size
         }
 
         private inline fun <T> unsubscribeInternal(query: Query, map: MutableMap<Query, MutableList<T>>, count: Int, vararg listeners: T, deactivate: () -> Unit): Int {
@@ -109,6 +120,12 @@ class FirebaseReferenceManager {
 
             override fun onDataChange(p0: DataSnapshot) {
                 valueEventSubs.values.forEach { it.forEach { it.onDataChange(p0) } }
+                singleValueEventSubs.values.forEach {
+                    it.forEach {
+                        it.onDataChange(p0)
+                        --numValueEventSubs
+                    }
+                }
             }
         }
     }

@@ -50,6 +50,16 @@ private constructor(
         return map[it]
     }
 
+    fun clear() {
+        map.clear()
+    }
+
+    fun addAll(items: List<V>) {
+        items.forEach { map[orderKeyFunction(it)] = it }
+
+
+    }
+
 }
 
 class FirebaseListCollection<K, V : IFirebaseEntity>

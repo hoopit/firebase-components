@@ -15,6 +15,12 @@ class FirebaseCache(
     private val pagedListCache = mutableMapOf<QuerySpec, FirebasePagedListQueryCache<*, *>>()
     private val listCache = mutableMapOf<QuerySpec, FirebaseListQueryCache<*, *>>()
 
+    fun dispose(querySpec: QuerySpec) {
+        pagedListCache[querySpec]?.dispose()
+
+    }
+
+
     fun <T : Any> getCache(clazz: KClass<T>): FirebaseValueCache<T> {
         @Suppress("UNCHECKED_CAST")
         return valueCaches.getOrPut(clazz) {
@@ -48,6 +54,6 @@ class FirebaseCache(
     fun registerListQueryCache(cache: FirebaseListQueryCache<*, *>, query: Query) {
         listCache.getOrPut(query.spec) { cache }
         val scope = scope.getResource(cache.query)
-        return scope.addListener(cache.getListener())
+        return scope.addListener(cache.getChildListener())
     }
 }

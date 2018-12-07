@@ -10,7 +10,8 @@ import com.google.firebase.database.core.view.QuerySpec
 import io.hoopit.firebasecomponents.core.FirebaseResource
 import io.hoopit.firebasecomponents.core.Scope
 import io.hoopit.firebasecomponents.lifecycle.FirebaseCacheLiveData
-import io.hoopit.firebasecomponents.paging.QueryCacheListener
+import io.hoopit.firebasecomponents.paging.QueryCacheChildrenListener
+import io.hoopit.firebasecomponents.paging.QueryCacheValueListener
 import kotlin.reflect.KClass
 
 abstract class FirebaseManagedQueryCache<K : Comparable<K>, Type : FirebaseResource>(
@@ -38,18 +39,25 @@ abstract class FirebaseManagedQueryCache<K : Comparable<K>, Type : FirebaseResou
         super.delete(item)
     }
 
-    fun getListener() = QueryCacheListener(clazz, this)
+    fun getChildListener() = QueryCacheChildrenListener(clazz, this)
+
+    fun getValueListener() = QueryCacheValueListener(this)
 }
 
 interface IManagedCache {
     fun onInactive(firebaseCacheLiveData: LiveData<*>, query: Query)
     fun onActive(firebaseCacheLiveData: LiveData<*>, query: Query)
+    fun dispose()
 }
 
 class FirebaseValueCache<Type : Any>(
     private val scope: Scope,
     private val clazz: KClass<Type>
 ) : IManagedCache {
+
+    override fun dispose() {
+        TODO("not implemented")
+    }
 
     private val liveData = mutableMapOf<QuerySpec, LiveData<Type?>>()
 

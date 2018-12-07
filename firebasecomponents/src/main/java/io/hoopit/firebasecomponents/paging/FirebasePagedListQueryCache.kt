@@ -17,11 +17,19 @@ class FirebasePagedListQueryCache<K : Comparable<K>, Type : FirebaseResource>(
 
     private val dataSourceFactory = FirebaseDataSourceFactory(this, query, orderKeyFunction)
 
+    private var isInitialized = false
+
+
     fun getDataSourceFactory(): FirebaseDataSourceFactory<K, Type> {
         return dataSourceFactory
     }
 
-    fun getAround(key: K?, limit: Int): List<Type> {
+    fun getInitial(key: K?, limit: Int): List<Type> {
+//        if (!isInitialized) {
+//            val listener = getListener()
+//            scope.getResource(query).addListener(listener)
+//            isInitialized = true
+//        }
         return collection.getAround(key, limit)
     }
 

@@ -1,16 +1,23 @@
 package io.hoopit.firebasecomponents.paging
 
+import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.GenericTypeIndicator
+import com.google.firebase.database.ValueEventListener
 import io.hoopit.firebasecomponents.cache.FirebaseQueryCacheBase
 import io.hoopit.firebasecomponents.core.FirebaseChildEventListener
 import io.hoopit.firebasecomponents.core.IFirebaseEntity
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
-class QueryCacheListener<RemoteType : IFirebaseEntity>(
+interface IQueryCacheListener {
+    fun getCount(): Int
+}
+
+class QueryCacheChildrenListener<RemoteType : IFirebaseEntity>(
     clazz: KClass<RemoteType>,
     private val cache: FirebaseQueryCacheBase<*, RemoteType>
-) : FirebaseChildEventListener<RemoteType>(clazz) {
+) : FirebaseChildEventListener<RemoteType>(clazz), IQueryCacheListener {
 
     private val count = AtomicInteger()
 
@@ -39,8 +46,32 @@ class QueryCacheListener<RemoteType : IFirebaseEntity>(
     }
 
     @Synchronized
-    fun getCount(): Int {
+    override fun getCount(): Int {
         return count.get()
     }
+}
 
+class QueryCacheValueListener<RemoteType : IFirebaseEntity>(
+    private val cache: FirebaseQueryCacheBase<*, RemoteType>
+) : ValueEventListener, IQueryCacheListener {
+
+    override fun onCancelled(p0: DatabaseError) {
+        TODO("not implemented")
+    }
+
+    @Synchronized
+    override fun onDataChange(snapshot: DataSnapshot) {
+        val items = snapshot.getValue(object : GenericTypeIndicator<List<RemoteType>>() {})
+        items?.let {
+            count.set(it.size)
+            cache.insertAll(items)
+        }
+    }
+
+    private val count = AtomicInteger()
+
+    @Synchronized
+    override fun getCount(): Int {
+        return count.get()
+    }
 }

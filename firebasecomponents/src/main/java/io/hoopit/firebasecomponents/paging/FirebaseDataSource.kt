@@ -12,7 +12,7 @@ class FirebaseDataSource<Key : Comparable<Key>, StoreType : FirebaseResource>(
         params: LoadInitialParams<Pair<String, Key>>,
         callback: LoadInitialCallback<StoreType>
     ) {
-        val items = store.getAround(
+        val items = store.getInitial(
                 params.requestedInitialKey?.second,
                 params.requestedLoadSize
         )

@@ -23,6 +23,12 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>
 //        scope.dispatchActivate()
     }
 
+    override fun dispose() {
+        collection.clear()
+        invalidate()
+        TODO("not implemented")
+    }
+
     private val invalidationHandler = Handler(Looper.getMainLooper())
 
     private var isInvalidatePending = false
@@ -46,6 +52,12 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>
     open fun insert(previousId: String?, item: Type) {
         collection.addAfter(previousId, item)
         items[orderKeyFunction(item)]?.postValue(item)
+        dispatchInvalidate()
+    }
+
+    open fun insertAll(items: List<Type>) {
+        collection.addAll(items)
+        items.forEach { this.items[orderKeyFunction(it)]?.postValue(it) }
         dispatchInvalidate()
     }
 

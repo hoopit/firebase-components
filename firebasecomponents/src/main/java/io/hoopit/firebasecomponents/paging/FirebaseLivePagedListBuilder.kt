@@ -53,7 +53,7 @@ class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, Remot
     }
 
     private fun buildBoundaryCallback(): FirebasePagedListBoundaryCallback<LocalType, Key> {
-        return FirebaseManagedPagedListBoundaryCallback(
+        return FirebaseSimplePagedListBoundaryCallback(
                 factory.query,
                 factory.keyFunction,
                 factory.cache,

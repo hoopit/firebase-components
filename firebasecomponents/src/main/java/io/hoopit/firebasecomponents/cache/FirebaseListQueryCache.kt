@@ -20,7 +20,7 @@ class FirebaseListQueryCache<K : Comparable<K>, T : FirebaseResource>(
     fun getLiveData(query: Query, disconnectDelay: Long, resource: Scope.Resource = scope.getResource(query)): LiveData<List<T>> {
         if (liveData == null) {
             liveData = FirebaseCacheLiveData<List<T>>(scope.getResource(query), query, this, disconnectDelay).also {
-                if (resource.rootQuery == query) resource.addListener(getListener())
+                if (resource.rootQuery == query) resource.addListener(getChildListener())
             }
         }
         return requireNotNull(liveData)
