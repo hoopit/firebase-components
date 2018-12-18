@@ -86,8 +86,9 @@ class FirebaseReferenceManager {
             if (newCount == 0) {
                 Timber.d("called: unsubscribeInternal: deactivating: $querySpec")
                 deactivate()
-            } else if (newCount < 0) throw IllegalStateException("Attempting to unsub with 0 subs")
-            return count - newCount
+            } else if (newCount < 0)
+                throw IllegalStateException("Attempting to unsub with 0 subs: $querySpec")
+            return newCount
         }
 
         private val childListener = object : ChildEventListener {

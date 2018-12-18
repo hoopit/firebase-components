@@ -54,7 +54,7 @@ private constructor(
         map.clear()
     }
 
-    fun addAll(items: List<V>) {
+    fun addAll(items: Collection<V>) {
         items.forEach { map[orderKeyFunction(it)] = it }
 
 

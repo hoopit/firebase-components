@@ -27,6 +27,14 @@ abstract class FirebaseManagedQueryCache<K : Comparable<K>, Type : FirebaseResou
         super.insert(previousId, item)
     }
 
+    override fun insertAll(items: Collection<Type>) {
+        items.forEach {
+            it.scope = scope
+            it.query = query
+        }
+        super.insertAll(items)
+    }
+
     override fun update(previousId: String?, item: Type) {
         item.scope = scope
         item.query = query
@@ -41,7 +49,7 @@ abstract class FirebaseManagedQueryCache<K : Comparable<K>, Type : FirebaseResou
 
     fun getChildListener() = QueryCacheChildrenListener(clazz, this)
 
-    fun getValueListener() = QueryCacheValueListener(this)
+    fun getValueListener() = QueryCacheValueListener(this, clazz)
 }
 
 interface IManagedCache {

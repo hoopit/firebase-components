@@ -2,7 +2,6 @@ package io.hoopit.firebasecomponents.paging
 
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.GenericTypeIndicator
 import com.google.firebase.database.ValueEventListener
 import io.hoopit.firebasecomponents.cache.FirebaseQueryCacheBase
 import io.hoopit.firebasecomponents.core.FirebaseChildEventListener
@@ -52,7 +51,8 @@ class QueryCacheChildrenListener<RemoteType : IFirebaseEntity>(
 }
 
 class QueryCacheValueListener<RemoteType : IFirebaseEntity>(
-    private val cache: FirebaseQueryCacheBase<*, RemoteType>
+    private val cache: FirebaseQueryCacheBase<*, RemoteType>,
+    private val clazz: KClass<RemoteType>
 ) : ValueEventListener, IQueryCacheListener {
 
     override fun onCancelled(p0: DatabaseError) {
@@ -61,8 +61,9 @@ class QueryCacheValueListener<RemoteType : IFirebaseEntity>(
 
     @Synchronized
     override fun onDataChange(snapshot: DataSnapshot) {
-        val items = snapshot.getValue(object : GenericTypeIndicator<List<RemoteType>>() {})
-        items?.let {
+        val items = snapshot.children.map { requireNotNull(it.getValue(clazz.java)?.apply { entityId = requireNotNull(it.key) }) }
+//        val items = snapshot.getValue(object : GenericTypeIndicator<HashMap<String, RemoteType>>() {}) ?: return
+        items.let {
             count.set(it.size)
             cache.insertAll(items)
         }

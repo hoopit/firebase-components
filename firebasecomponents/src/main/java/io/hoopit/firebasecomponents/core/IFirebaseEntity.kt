@@ -9,11 +9,6 @@ import com.google.firebase.database.Query
 interface IFirebaseEntity {
     var entityId: String
 
-    object OrderBy {
-
-        fun key(item: IFirebaseEntity) = item.entityId
-
-    }
 }
 
 abstract class FirebaseResource(val disconnectDelay: Long) : IFirebaseEntity {

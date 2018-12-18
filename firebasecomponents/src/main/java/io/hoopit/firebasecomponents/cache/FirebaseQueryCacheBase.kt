@@ -26,7 +26,7 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>
     override fun dispose() {
         collection.clear()
         invalidate()
-        TODO("not implemented")
+//        TODO("not implemented")
     }
 
     private val invalidationHandler = Handler(Looper.getMainLooper())
@@ -55,7 +55,7 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>
         dispatchInvalidate()
     }
 
-    open fun insertAll(items: List<Type>) {
+    open fun insertAll(items: Collection<Type>) {
         collection.addAll(items)
         items.forEach { this.items[orderKeyFunction(it)]?.postValue(it) }
         dispatchInvalidate()
