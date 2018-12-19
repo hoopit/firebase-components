@@ -20,7 +20,7 @@ private constructor(
     }, ascending, orderKeyFunction)
 
     fun getAround(key: K?, limit: Int): List<V> {
-        val list = key?.let { map.tailMap(it, false).values } ?: map.values
+        val list = key?.let { map.tailMap(it, true).values } ?: map.values
         return list.take(limit)
     }
 

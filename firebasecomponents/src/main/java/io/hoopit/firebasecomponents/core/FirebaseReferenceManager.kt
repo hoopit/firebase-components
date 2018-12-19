@@ -47,9 +47,9 @@ class FirebaseReferenceManager {
 
         @Synchronized
         fun subscribeSingle(query: Query, vararg listeners: ValueEventListener) {
-            Timber.d("called: subscribe: ${query.spec}")
+            Timber.d("called: subscribeSingle: ${query.spec}")
             numValueEventSubs = subscribeInternal(query, singleValueEventSubs, numValueEventSubs, *listeners) {
-                query.addValueEventListener(valueListener)
+                query.addListenerForSingleValueEvent(valueListener)
             }
         }
 
@@ -62,6 +62,9 @@ class FirebaseReferenceManager {
         @Synchronized
         fun unsubscribe(query: Query, vararg listeners: ChildEventListener) {
             numChildEventSubs = unsubscribeInternal(query, childEventSubs, numChildEventSubs, *listeners) { query.removeEventListener(childListener) }
+        }
+
+        private fun unsubscribleSingleValueListener() {
         }
 
         private inline fun <T> subscribeInternal(query: Query, map: MutableMap<Query, MutableList<T>>, currentSubs: Int, vararg listeners: T, activate: () -> Unit): Int {
@@ -121,10 +124,10 @@ class FirebaseReferenceManager {
 
             override fun onDataChange(p0: DataSnapshot) {
                 valueEventSubs.values.forEach { it.forEach { it.onDataChange(p0) } }
-                singleValueEventSubs.values.forEach {
+                for ((key, it) in singleValueEventSubs) {
                     it.forEach {
                         it.onDataChange(p0)
-                        --numValueEventSubs
+                        numValueEventSubs = unsubscribeInternal(key, singleValueEventSubs, numValueEventSubs, it) { key.removeEventListener(this) }
                     }
                 }
             }

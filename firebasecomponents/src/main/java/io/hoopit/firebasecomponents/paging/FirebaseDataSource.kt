@@ -2,6 +2,7 @@ package io.hoopit.firebasecomponents.paging
 
 import androidx.paging.ItemKeyedDataSource
 import io.hoopit.firebasecomponents.core.FirebaseResource
+import timber.log.Timber
 
 class FirebaseDataSource<Key : Comparable<Key>, StoreType : FirebaseResource>(
     private val keyFunction: (StoreType) -> Key,
@@ -16,6 +17,8 @@ class FirebaseDataSource<Key : Comparable<Key>, StoreType : FirebaseResource>(
                 params.requestedInitialKey?.second,
                 params.requestedLoadSize
         )
+//        callback.onResult(items)
+        // TODO: required for placheolder support
         callback.onResult(
                 items,
                 items.firstOrNull()?.let { store.indexOf(it) } ?: 0,
@@ -27,6 +30,7 @@ class FirebaseDataSource<Key : Comparable<Key>, StoreType : FirebaseResource>(
         params: LoadParams<Pair<String, Key>>,
         callback: LoadCallback<StoreType>
     ) {
+        Timber.d("called: loadAfter")
         callback.onResult(store.getAfter(params.key.second, params.requestedLoadSize))
     }
 
@@ -34,6 +38,7 @@ class FirebaseDataSource<Key : Comparable<Key>, StoreType : FirebaseResource>(
         params: LoadParams<Pair<String, Key>>,
         callback: LoadCallback<StoreType>
     ) {
+        Timber.d("called: loadBefore")
         callback.onResult(store.getBefore(params.key.second, params.requestedLoadSize))
     }
 

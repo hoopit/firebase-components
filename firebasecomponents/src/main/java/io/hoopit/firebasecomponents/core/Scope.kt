@@ -70,6 +70,8 @@ class Scope(
 
         @Synchronized
         fun dispatchDeactivate(disconnectDelay: Long = this.disconnectDelay) {
+            listener.run()
+            return
             if (disconnectDelay > 0) {
                 pendingRemoval = true
                 handler.postDelayed(listener, disconnectDelay)
