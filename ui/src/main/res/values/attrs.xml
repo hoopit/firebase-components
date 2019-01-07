@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="TextViewCompatTint">
+        <attr name="drawableTint" format="reference|color" />
+        <attr name="drawableTintMode" format="reference" />
+        <attr name="drawableIconSize" format="reference|dimension" />
+    </declare-styleable>
+
+    <declare-styleable name="EditTextCompatTint">
+        <attr name="iconTint" format="reference|color" />
+        <attr name="defaultIconTint" format="reference|color" />
+    </declare-styleable>
+
+    <declare-styleable name="CustomTextInputLayout">
+        <attr name="imageTint" format="reference|color" />
+        <attr name="defaultTint" format="reference|color" />
+        <attr name="imageTintMode" format="reference" />
+        <attr name="showOptional" format="reference|boolean" />
+    </declare-styleable>
+
+    <declare-styleable name="LinearLayoutCompatTint">
+        <attr name="backgroundTint" format="reference|color" />
+    </declare-styleable>
+
+    <declare-styleable name="RadioButtonCompatTint">
+        <attr name="radioBackgroundTint" format="reference|color" />
+    </declare-styleable>
+
+    <declare-styleable name="EmptyRecyclerView">
+        <attr name="emptyView" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="EmptyStateImage">
+        <attr name="title" format="reference|string" />
+        <attr name="text" format="reference|string" />
+        <attr name="image" format="reference" />
+    </declare-styleable>
+
+</resources>

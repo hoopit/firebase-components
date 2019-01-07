@@ -1,1 +1,1 @@
-include ':app', ':firebasecomponents'
+include ':app', ':firebase-realtime', ':common', ':ui', ':lifecycle', ':network'

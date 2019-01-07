@@ -1,19 +1,38 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
+apply plugin: 'com.android.library'
 //apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
-//apply plugin: 'idea'
+apply plugin: 'idea'
+
+//buildscript {
+//    repositories {
+//        maven { url "https://jitpack.io" }
+//    }
+//
+//    dependencies {
+//        classpath "com.github.dcendents:android-maven-gradle-plugin:$mavenGradleVersion"
+//    }
+//}
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
 
 android {
     compileSdkVersion 28
+
     defaultConfig {
-        applicationId "io.hoopit.firebasecomponents"
         minSdkVersion 19
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
+
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -28,12 +47,16 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation project(':firebase-realtime')
-
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.0.2'
+
+//    implementation 'androidx.appcompat:appcompat:1.0.2'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.1.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
 
+    api 'androidx.paging:paging-runtime:2.0.0'
+    implementation "com.google.firebase:firebase-core:$firebaseCoreVersion"
+    api "com.google.firebase:firebase-database:$firebaseDatabaseVersion"
+
+    implementation "com.jakewharton.timber:timber:$timberVersion"
 }
