@@ -6,7 +6,6 @@ import androidx.annotation.LayoutRes
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.LifecycleOwner
-import androidx.paging.PagedList
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import io.ezet.android.ui.NetworkState
@@ -39,13 +38,6 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
     private var endLoadingState: NetworkState? = null
 
     private var frontLoadingState: NetworkState? = null
-
-    var listChangedListener: ((PagedList<T>?) -> Unit)? = null
-
-    override fun onCurrentListChanged(previousList: PagedList<T>?, currentList: PagedList<T>?) {
-        super.onCurrentListChanged(previousList, currentList)
-        listChangedListener?.invoke(currentList)
-    }
 
     companion object {
         const val LAYOUT = 1
