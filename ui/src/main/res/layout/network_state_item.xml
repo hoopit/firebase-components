@@ -4,11 +4,11 @@
 
     <data>
 
-        <import type="io.ezet.android.ui.NetworkState.Status" />
+        <import type="io.hoopit.android.ui.NetworkState" />
 
         <variable
             name="item"
-            type="io.ezet.android.ui.NetworkState" />
+            type="io.hoopit.android.ui.NetworkState" />
     </data>
 
 
