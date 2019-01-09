@@ -1,13 +1,13 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'kotlin-android'
+if (System.getenv('JITPACK') != null) {
+    apply plugin: 'com.github.dcendents.android-maven'
+}
 
 //group='com.github.hoopit'
 
 android {
     compileSdkVersion 28
-
-
 
     defaultConfig {
         minSdkVersion 19

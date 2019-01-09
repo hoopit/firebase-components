@@ -1,7 +1,9 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
-apply plugin: 'com.github.dcendents.android-maven'
+if (System.getenv('JITPACK') != null) {
+    apply plugin: 'com.github.dcendents.android-maven'
+}
 
 //group='com.github.hoopit'
 
@@ -30,27 +32,21 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    configurations.all {
-        resolutionStrategy.force "com.android.tools.build.jetifier:jetifier-core:1.0.0-beta02"
-    }
-
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     api project(':common')
-    api 'com.google.android.material:material:1.0.0'
-    api 'androidx.recyclerview:recyclerview:1.0.0'
-    api 'androidx.constraintlayout:constraintlayout:2.0.0-alpha3'
+    api "com.google.android.material:material:$material"
+    api "androidx.recyclerview:recyclerview:$recyclerview"
+    api "androidx.constraintlayout:constraintlayout:$constraintlayout"
 
     kapt 'androidx.databinding:databinding-compiler:3.2.1'
 
-    api 'com.jakewharton.rxbinding3:rxbinding:3.0.0-alpha2'
+    api "com.jakewharton.rxbinding3:rxbinding:$rxbinding"
 
-    def paging_version = "2.1.0-rc01"
-    api "androidx.paging:paging-runtime:$paging_version"
-//    implementation "androidx.paging:paging-rxjava2-ktx:$paging_version"
+    api "androidx.paging:paging-runtime-ktx:$paging"
 
 //    implementation 'androidx.appcompat:appcompat:1.0.0-alpha1'
 //    testImplementation 'junit:junit:4.12'

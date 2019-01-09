@@ -90,7 +90,9 @@ class CustomTextInputLayout @JvmOverloads constructor(
             val params =
                 LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
             params.gravity = GravityCompat.END
-            TextViewCompat.setTextAppearance(tvOptional, R.style.TextAppearance_MaterialComponents_Caption)
+            TextViewCompat.setTextAppearance(tvOptional,
+                R.style.TextAppearance_MaterialComponents_Caption
+            )
             this.addView(tvOptional, params)
         }
     }
