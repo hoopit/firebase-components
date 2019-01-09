@@ -30,7 +30,7 @@ allprojects {
 ext {
     appcompat = '1.0.2'
     lifecycle = '2.0.0'
-    ktx = '1.0.1'
+    androidx_core = '1.0.1'
     material = '1.0.0'
     recyclerview = '1.0.0'
     constraintlayout = '2.0.0-alpha3'
