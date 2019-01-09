@@ -27,7 +27,17 @@ allprojects {
     }
 }
 
+ext {
+    appcompat = '1.0.2'
+    lifecycle = '2.0.0'
+    ktx = '1.0.1'
+    material = '1.0.0'
+    recyclerview = '1.0.0'
+    constraintlayout = '2.0.0-alpha3'
+    rxbinding = '3.0.0-alpha2'
+    paging = '2.1.0-rc01'
 
+}
 
 ext {
     firebaseCoreVersion = "16.0.4"
