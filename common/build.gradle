@@ -46,7 +46,7 @@ dependencies {
 
     // ViewModel and LiveData
     implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle"
-    implementation "androidx.core:core-ktx:$ktx"
+    implementation "androidx.core:core-ktx:$androidx_core"
 
 }
 repositories {
