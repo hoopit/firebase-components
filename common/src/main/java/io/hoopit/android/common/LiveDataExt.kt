@@ -65,7 +65,7 @@ fun <T> LiveData<T>.observeFirstForever(observer: (T?) -> Unit) {
 /**
  * Extension wrapper for [Transformations.switchMap]
  */
-fun <X, Y> LiveData<X>.switchMap(func: (X) -> LiveData<Y>) =
+fun <X, Y> LiveData<X>.switchMap(func: (X) -> LiveData<Y>?): LiveData<Y> =
     Transformations.switchMap(this, func)
 
 /**

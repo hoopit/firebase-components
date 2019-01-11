@@ -1,9 +1,10 @@
-package io.hoopit.firebasecomponents.lifecycle
+package io.hoopit.android.firebaserealtime.lifecycle
 
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
+import io.hoopit.android.common.livedata.DelayedDisconnectLiveData
 import kotlin.reflect.KClass
 
 class FirebaseValueLiveData<T : Any>(

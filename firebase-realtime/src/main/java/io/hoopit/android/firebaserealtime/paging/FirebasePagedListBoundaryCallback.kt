@@ -1,8 +1,7 @@
-package io.hoopit.firebasecomponents.paging
+package io.hoopit.android.firebaserealtime.paging
 
 import androidx.paging.PagedList
 import com.google.firebase.database.Query
-import io.hoopit.firebasecomponents.core.Scope
 import timber.log.Timber
 
 /***
@@ -20,6 +19,7 @@ abstract class FirebasePagedListBoundaryCallback<LocalType, Key>(
 
     override fun onItemAtEndLoaded(itemAtEnd: LocalType) {
         Timber.d("called: onItemAtEndLoaded: ${query.spec}")
+        return
         if (query.spec.loadsAllData()) {
             Timber.d("onItemAtEndLoaded: Ignored: Query loads all data.")
             return
@@ -30,7 +30,8 @@ abstract class FirebasePagedListBoundaryCallback<LocalType, Key>(
     }
 
     override fun onItemAtFrontLoaded(itemAtFront: LocalType) {
-//        Timber.d("called: onItemAtFrontLoaded: ${query.spec}")
+        Timber.d("called: onItemAtFrontLoaded: ${query.spec}")
+        return
         if (query.spec.loadsAllData()) {
 //            Timber.d("onItemAtFrontLoaded: Ignored: Query loads all data.")
             return
@@ -77,7 +78,7 @@ class FirebaseManagedPagedListBoundaryCallback<LocalType, Key>(
     query: Query,
     sortKey: (LocalType) -> Key,
     private val cache: FirebasePagedListQueryCache<*, *>,
-    private val resource: Scope.Resource,
+    private val resource: io.hoopit.android.firebaserealtime.core.Scope.Resource,
     private val pagedListConfig: PagedList.Config? = null
 ) : FirebasePagedListBoundaryCallback<LocalType, Key>(cache.query, sortKey) {
 
@@ -141,7 +142,7 @@ class FirebaseSimplePagedListBoundaryCallback<LocalType, Key>(
     query: Query,
     sortKey: (LocalType) -> Key,
     private val cache: FirebasePagedListQueryCache<*, *>,
-    private val resource: Scope.Resource,
+    private val resource: io.hoopit.android.firebaserealtime.core.Scope.Resource,
     private val pagedListConfig: PagedList.Config? = null
 ) : FirebasePagedListBoundaryCallback<LocalType, Key>(cache.query, sortKey) {
 

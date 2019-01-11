@@ -1,6 +1,5 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-
 if (System.getenv('JITPACK') != null) {
     apply plugin: 'com.github.dcendents.android-maven'
 }
@@ -9,8 +8,6 @@ if (System.getenv('JITPACK') != null) {
 
 android {
     compileSdkVersion 28
-
-
 
     defaultConfig {
         minSdkVersion 19
@@ -39,14 +36,14 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
-    implementation "androidx.appcompat:appcompat:$appcompat"
+    implementation "androidx.appcompat:appcompat:$appcompat_version"
 //    testImplementation 'junit:junit:4.12'
 //    androidTestImplementation 'androidx.test:runner:1.1.0-alpha3'
 //    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0-alpha3'
 
     // ViewModel and LiveData
-    implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle"
-    implementation "androidx.core:core-ktx:$androidx_core"
+    implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
+    implementation "androidx.core:core-ktx:$core_ktx_version"
 
 }
 repositories {

@@ -1,19 +1,19 @@
-package io.hoopit.firebasecomponents.cache
+package io.hoopit.android.firebaserealtime.cache
 
 import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.firebase.database.Query
-import io.hoopit.firebasecomponents.core.FirebaseCollection
-import io.hoopit.firebasecomponents.core.IFirebaseEntity
-import io.hoopit.firebasecomponents.ext.liveData
+import io.hoopit.android.common.liveData
+import io.hoopit.android.firebaserealtime.core.FirebaseCollection
+import io.hoopit.android.firebaserealtime.core.IFirebaseEntity
 import timber.log.Timber
 
-abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>(
+abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : io.hoopit.android.firebaserealtime.core.IFirebaseEntity>(
     private val query: Query,
     private val orderKeyFunction: (Type) -> K
-) : IManagedCache {
+) : io.hoopit.android.firebaserealtime.cache.IManagedCache {
 
     override fun onInactive(firebaseCacheLiveData: LiveData<*>, query: Query) {
 //        scope.dispatchDeactivate()
@@ -38,7 +38,10 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>
         invalidate()
     }
 
-    protected val collection = FirebaseCollection(orderKeyFunction, query.spec.params.isViewFromLeft)
+    protected val collection = io.hoopit.android.firebaserealtime.core.FirebaseCollection(
+        orderKeyFunction,
+        query.spec.params.isViewFromLeft
+    )
 
     val size: Int
         get() = collection.size

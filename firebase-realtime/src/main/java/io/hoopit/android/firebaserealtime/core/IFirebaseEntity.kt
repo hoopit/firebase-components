@@ -1,4 +1,4 @@
-package io.hoopit.firebasecomponents.core
+package io.hoopit.android.firebaserealtime.core
 
 import com.google.firebase.database.Query
 
@@ -13,7 +13,7 @@ interface IFirebaseEntity {
 
 abstract class FirebaseResource(val disconnectDelay: Long) : IFirebaseEntity {
     override lateinit var entityId: String
-    lateinit var scope: Scope
+    lateinit var scope: io.hoopit.android.firebaserealtime.core.Scope
     lateinit var query: Query
 }
 

@@ -1,4 +1,4 @@
-package io.hoopit.firebasecomponents.cache
+package io.hoopit.android.firebaserealtime.cache
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -7,19 +7,17 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.core.view.QuerySpec
-import io.hoopit.firebasecomponents.core.FirebaseResource
-import io.hoopit.firebasecomponents.core.Scope
-import io.hoopit.firebasecomponents.lifecycle.FirebaseCacheLiveData
-import io.hoopit.firebasecomponents.paging.QueryCacheChildrenListener
-import io.hoopit.firebasecomponents.paging.QueryCacheValueListener
+import io.hoopit.android.firebaserealtime.lifecycle.FirebaseCacheLiveData
+import io.hoopit.android.firebaserealtime.paging.QueryCacheChildrenListener
+import io.hoopit.android.firebaserealtime.paging.QueryCacheValueListener
 import kotlin.reflect.KClass
 
-abstract class FirebaseManagedQueryCache<K : Comparable<K>, Type : FirebaseResource>(
-    private val scope: Scope,
+abstract class FirebaseManagedQueryCache<K : Comparable<K>, Type : io.hoopit.android.firebaserealtime.core.FirebaseResource>(
+    private val scope: io.hoopit.android.firebaserealtime.core.Scope,
     val query: Query,
     private val clazz: KClass<Type>,
     orderKeyFunction: (Type) -> K
-) : FirebaseQueryCacheBase<K, Type>(query, orderKeyFunction) {
+) : io.hoopit.android.firebaserealtime.cache.FirebaseQueryCacheBase<K, Type>(query, orderKeyFunction) {
 
     override fun insert(previousId: String?, item: Type) {
         item.scope = scope
@@ -59,7 +57,7 @@ interface IManagedCache {
 }
 
 class FirebaseValueCache<Type : Any>(
-    private val scope: Scope,
+    private val scope: io.hoopit.android.firebaserealtime.core.Scope,
     private val clazz: KClass<Type>
 ) : IManagedCache {
 
@@ -73,7 +71,11 @@ class FirebaseValueCache<Type : Any>(
         return liveData[query.spec]?.value
     }
 
-    fun getLiveData(query: Query, disconnectDelay: Long, resource: Scope.Resource = scope.getResource(query)): LiveData<Type?> {
+    fun getLiveData(
+        query: Query,
+        disconnectDelay: Long,
+        resource: io.hoopit.android.firebaserealtime.core.Scope.Resource = scope.getResource(query)
+    ): LiveData<Type?> {
         return liveData.getOrPut(query.spec) {
             FirebaseCacheLiveData<Type?>(resource, query, this, disconnectDelay).also {
                 if (resource.rootQuery == query)
@@ -86,7 +88,8 @@ class FirebaseValueCache<Type : Any>(
 
     override fun onActive(firebaseCacheLiveData: LiveData<*>, query: Query) {}
 
-    private class Listener<T : Any>(private val clazz: KClass<T>, private val liveData: MutableLiveData<T?>) : ValueEventListener {
+    private class Listener<T : Any>(private val clazz: KClass<T>, private val liveData: MutableLiveData<T?>) :
+        ValueEventListener {
 
         override fun onCancelled(p0: DatabaseError) {
             TODO("not implemented")
@@ -95,7 +98,6 @@ class FirebaseValueCache<Type : Any>(
         override fun onDataChange(snapshot: DataSnapshot) {
             liveData.postValue(snapshot.getValue(clazz.java))
         }
-
     }
 }
 

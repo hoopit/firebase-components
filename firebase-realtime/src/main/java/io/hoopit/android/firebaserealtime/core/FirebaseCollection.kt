@@ -1,10 +1,10 @@
-package io.hoopit.firebasecomponents.core
+package io.hoopit.android.firebaserealtime.core
 
 import java.util.Collections
 import java.util.LinkedList
 import java.util.concurrent.ConcurrentSkipListMap
 
-class FirebaseCollection<K : Comparable<K>, V : IFirebaseEntity>
+class FirebaseCollection<K : Comparable<K>, V : io.hoopit.android.firebaserealtime.core.IFirebaseEntity>
 private constructor(
     private val map: ConcurrentSkipListMap<K, V>,
     private val ascending: Boolean,
@@ -62,7 +62,7 @@ private constructor(
 
 }
 
-class FirebaseListCollection<K, V : IFirebaseEntity>
+class FirebaseListCollection<K, V : io.hoopit.android.firebaserealtime.core.IFirebaseEntity>
 private constructor(
     private val list: MutableList<V>,
     private val ascending: Boolean,

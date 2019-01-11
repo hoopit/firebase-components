@@ -1,4 +1,4 @@
-package io.hoopit.firebasecomponents.core
+package io.hoopit.android.firebaserealtime.core
 
 import android.os.Handler
 import android.os.Looper
@@ -9,17 +9,19 @@ import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 
 class Scope(
-    private val referenceManager: FirebaseReferenceManager
+    private val referenceManager: io.hoopit.android.firebaserealtime.core.FirebaseReferenceManager
 ) {
 
-    lateinit var cache: FirebaseCache
+    lateinit var cache: io.hoopit.android.firebaserealtime.core.FirebaseCache
 
     companion object {
-        val defaultInstance = Scope(FirebaseReferenceManager()).also { it.cache = FirebaseCache(it) }
+        val defaultInstance = Scope(io.hoopit.android.firebaserealtime.core.FirebaseReferenceManager()).also {
+            it.cache =
+                io.hoopit.android.firebaserealtime.core.FirebaseCache(it)
+        }
     }
 
     private val scopes = ConcurrentHashMap<Query, Resource>()
-
 
     @Synchronized
     fun getResource(query: Query, defaultDisconnectDelay: Long = 10000): Resource {
@@ -50,11 +52,9 @@ class Scope(
         private val singleValueListeners = ConcurrentHashMap<Query, MutableList<ValueEventListener>>()
         private var active = false
 
-
         private val handler = Handler(Looper.getMainLooper())
 
         private var pendingRemoval = false
-
 
         private val listener = Runnable {
             deactivate()
@@ -70,11 +70,12 @@ class Scope(
 
         @Synchronized
         fun dispatchDeactivate(disconnectDelay: Long = this.disconnectDelay) {
-            listener.run()
-            return
+//            listener.run()
+//             DEBUG: Remove return
+//            return
             if (disconnectDelay > 0) {
                 pendingRemoval = true
-                handler.postDelayed(listener, disconnectDelay)
+                handler.postDelayed(listener, 1)
             } else {
                 pendingRemoval = false
                 listener.run()
@@ -147,7 +148,6 @@ class Scope(
                     referenceManager.getReference(query).subscribe(query, listener)
                 activate(query)
             }
-
         }
 
         fun addListener(listener: ChildEventListener) {

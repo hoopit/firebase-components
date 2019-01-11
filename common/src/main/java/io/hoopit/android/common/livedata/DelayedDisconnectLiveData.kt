@@ -1,4 +1,4 @@
-package io.hoopit.firebasecomponents.lifecycle
+package io.hoopit.android.common.livedata
 
 import android.os.Handler
 import android.os.Looper

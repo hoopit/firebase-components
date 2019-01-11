@@ -1,11 +1,11 @@
-package io.hoopit.firebasecomponents.paging
+package io.hoopit.android.firebaserealtime.paging
 
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
-import io.hoopit.firebasecomponents.cache.FirebaseQueryCacheBase
-import io.hoopit.firebasecomponents.core.FirebaseChildEventListener
-import io.hoopit.firebasecomponents.core.IFirebaseEntity
+import io.hoopit.android.firebaserealtime.cache.FirebaseQueryCacheBase
+import io.hoopit.android.firebaserealtime.core.FirebaseChildEventListener
+import io.hoopit.android.firebaserealtime.core.IFirebaseEntity
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
@@ -13,10 +13,10 @@ interface IQueryCacheListener {
     fun getCount(): Int
 }
 
-class QueryCacheChildrenListener<RemoteType : IFirebaseEntity>(
+class QueryCacheChildrenListener<RemoteType : io.hoopit.android.firebaserealtime.core.IFirebaseEntity>(
     clazz: KClass<RemoteType>,
-    private val cache: FirebaseQueryCacheBase<*, RemoteType>
-) : FirebaseChildEventListener<RemoteType>(clazz), IQueryCacheListener {
+    private val cache: io.hoopit.android.firebaserealtime.cache.FirebaseQueryCacheBase<*, RemoteType>
+) : io.hoopit.android.firebaserealtime.core.FirebaseChildEventListener<RemoteType>(clazz), IQueryCacheListener {
 
     private val count = AtomicInteger()
 
@@ -50,8 +50,8 @@ class QueryCacheChildrenListener<RemoteType : IFirebaseEntity>(
     }
 }
 
-class QueryCacheValueListener<RemoteType : IFirebaseEntity>(
-    private val cache: FirebaseQueryCacheBase<*, RemoteType>,
+class QueryCacheValueListener<RemoteType : io.hoopit.android.firebaserealtime.core.IFirebaseEntity>(
+    private val cache: io.hoopit.android.firebaserealtime.cache.FirebaseQueryCacheBase<*, RemoteType>,
     private val clazz: KClass<RemoteType>
 ) : ValueEventListener, IQueryCacheListener {
 

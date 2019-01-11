@@ -40,23 +40,20 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     api project(':common')
-    api "com.google.android.material:material:$material"
-    api "androidx.recyclerview:recyclerview:$recyclerview"
-    api "androidx.constraintlayout:constraintlayout:$constraintlayout"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    api "com.google.android.material:material:$material_version"
+    api "androidx.recyclerview:recyclerview:$recyclerview_version"
+    api "androidx.constraintlayout:constraintlayout:$constraintlayout_version"
 
-    kapt 'androidx.databinding:databinding-compiler:3.2.1'
+//    kapt "androidx.databinding:databinding-compiler:$databinding_version"
 
-    api "com.jakewharton.rxbinding3:rxbinding:$rxbinding"
+    api "com.jakewharton.rxbinding3:rxbinding:$rxbinding_version"
 
-    api "androidx.paging:paging-runtime-ktx:$paging"
+    api "androidx.paging:paging-runtime-ktx:$paging_version"
 
 //    implementation 'androidx.appcompat:appcompat:1.0.0-alpha1'
 //    testImplementation 'junit:junit:4.12'
 //    androidTestImplementation 'androidx.test:runner:1.1.0-alpha3'
 //    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0-alpha3'
-}
-repositories {
-    mavenCentral()
 }

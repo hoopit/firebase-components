@@ -1,9 +1,9 @@
-package io.hoopit.firebasecomponents.lifecycle
+package io.hoopit.android.firebaserealtime.lifecycle
 
 import androidx.lifecycle.MediatorLiveData
 import com.google.firebase.database.Query
-import io.hoopit.firebasecomponents.cache.IManagedCache
-import io.hoopit.firebasecomponents.core.Scope
+import io.hoopit.android.firebaserealtime.cache.IManagedCache
+import io.hoopit.android.firebaserealtime.core.Scope
 
 open class FirebaseCacheLiveData<Type>(
     private val resource: Scope.Resource,
@@ -16,7 +16,6 @@ open class FirebaseCacheLiveData<Type>(
         super.onInactive()
         cache?.onInactive(this, query)
         resource.dispatchDeactivate(disconnectDelay)
-
     }
 
     override fun onActive() {

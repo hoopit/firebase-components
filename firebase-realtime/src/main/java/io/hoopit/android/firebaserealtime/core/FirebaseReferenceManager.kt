@@ -1,4 +1,4 @@
-package io.hoopit.firebasecomponents.core
+package io.hoopit.android.firebaserealtime.core
 
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
@@ -21,7 +21,6 @@ class FirebaseReferenceManager {
         return references.getOrPut(query.spec) { FirebaseReference(querySpec = query.spec) }
     }
 
-
     class FirebaseReference(private val querySpec: QuerySpec) {
 
         // TODO: refactor
@@ -34,7 +33,10 @@ class FirebaseReferenceManager {
 
         @Synchronized
         fun subscribe(query: Query, vararg listeners: ChildEventListener) {
-            numChildEventSubs = subscribeInternal(query, childEventSubs, numChildEventSubs, *listeners) { query.addChildEventListener(childListener) }
+            Timber.d("called: subscribe: ${query.spec}")
+            numChildEventSubs = subscribeInternal(query, childEventSubs, numChildEventSubs, *listeners) {
+                query.addChildEventListener(childListener)
+            }
         }
 
         @Synchronized
@@ -55,19 +57,32 @@ class FirebaseReferenceManager {
 
         @Synchronized
         fun unsubscribe(query: Query, vararg listeners: ValueEventListener) {
-            numValueEventSubs = unsubscribeInternal(query, valueEventSubs, numValueEventSubs, *listeners) { query.removeEventListener(valueListener) }
-            numValueEventSubs = unsubscribeInternal(query, singleValueEventSubs, numValueEventSubs, *listeners) { query.removeEventListener(valueListener) }
+            numValueEventSubs = unsubscribeInternal(query, valueEventSubs, numValueEventSubs, *listeners) {
+                query.removeEventListener(valueListener)
+            }
+            numValueEventSubs = unsubscribeInternal(query, singleValueEventSubs, numValueEventSubs, *listeners) {
+                query.removeEventListener(valueListener)
+            }
         }
 
         @Synchronized
         fun unsubscribe(query: Query, vararg listeners: ChildEventListener) {
-            numChildEventSubs = unsubscribeInternal(query, childEventSubs, numChildEventSubs, *listeners) { query.removeEventListener(childListener) }
+            numChildEventSubs = unsubscribeInternal(query, childEventSubs, numChildEventSubs, *listeners) {
+                query.removeEventListener(childListener)
+            }
         }
 
         private fun unsubscribleSingleValueListener() {
         }
 
-        private inline fun <T> subscribeInternal(query: Query, map: MutableMap<Query, MutableList<T>>, currentSubs: Int, vararg listeners: T, activate: () -> Unit): Int {
+        @Synchronized
+        private inline fun <T> subscribeInternal(
+            query: Query,
+            map: MutableMap<Query, MutableList<T>>,
+            currentSubs: Int,
+            vararg listeners: T,
+            activate: () -> Unit
+        ): Int {
             assert(querySpec == query.spec) { "Can not subscribe to a Query with different QuerySpec." }
             assert(!map.contains(query)) { "Adding multiple listeners on the same Query is not yet supported. Consider creating a new Query." }
             val list = map.getOrPut(query) { mutableListOf() }
@@ -79,7 +94,15 @@ class FirebaseReferenceManager {
             return currentSubs + listeners.size
         }
 
-        private inline fun <T> unsubscribeInternal(query: Query, map: MutableMap<Query, MutableList<T>>, count: Int, vararg listeners: T, deactivate: () -> Unit): Int {
+        @Synchronized
+        private inline fun <T> unsubscribeInternal(
+            query: Query,
+            map: MutableMap<Query, MutableList<T>>,
+            count: Int,
+            vararg listeners: T,
+            deactivate: () -> Unit
+        ): Int {
+            if (count == 0) return count
             assert(querySpec == query.spec) { "Can not unsubscribe from a Query with different QuerySpec." }
             var newCount = count
             listeners.forEach {
@@ -97,23 +120,23 @@ class FirebaseReferenceManager {
         private val childListener = object : ChildEventListener {
 
             override fun onCancelled(error: DatabaseError) {
-                childEventSubs.values.forEach { it.forEach { it.onCancelled(error) } }
+                childEventSubs.values.forEach { list -> list.forEach { it.onCancelled(error) } }
             }
 
             override fun onChildMoved(snapshot: DataSnapshot, previousChildKey: String?) {
-                childEventSubs.values.forEach { it.forEach { it.onChildMoved(snapshot, previousChildKey) } }
+                childEventSubs.values.forEach { list -> list.forEach { it.onChildMoved(snapshot, previousChildKey) } }
             }
 
             override fun onChildChanged(snapshot: DataSnapshot, previousChildKey: String?) {
-                childEventSubs.values.forEach { it.forEach { it.onChildChanged(snapshot, previousChildKey) } }
+                childEventSubs.values.forEach { list -> list.forEach { it.onChildChanged(snapshot, previousChildKey) } }
             }
 
             override fun onChildAdded(snapshot: DataSnapshot, previousChildKey: String?) {
-                childEventSubs.values.forEach { it.forEach { it.onChildAdded(snapshot, previousChildKey) } }
+                childEventSubs.values.forEach { list -> list.forEach { it.onChildAdded(snapshot, previousChildKey) } }
             }
 
             override fun onChildRemoved(snapshot: DataSnapshot) {
-                childEventSubs.values.forEach { it.forEach { it.onChildRemoved(snapshot) } }
+                childEventSubs.values.forEach { list -> list.forEach { it.onChildRemoved(snapshot) } }
             }
         }
 
@@ -127,7 +150,12 @@ class FirebaseReferenceManager {
                 for ((key, it) in singleValueEventSubs) {
                     it.forEach {
                         it.onDataChange(p0)
-                        numValueEventSubs = unsubscribeInternal(key, singleValueEventSubs, numValueEventSubs, it) { key.removeEventListener(this) }
+                        numValueEventSubs = unsubscribeInternal(
+                            key,
+                            singleValueEventSubs,
+                            numValueEventSubs,
+                            it
+                        ) { key.removeEventListener(this) }
                     }
                 }
             }

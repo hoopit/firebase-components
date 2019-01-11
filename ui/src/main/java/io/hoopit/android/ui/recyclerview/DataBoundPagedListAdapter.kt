@@ -6,6 +6,7 @@ import androidx.annotation.LayoutRes
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.LifecycleOwner
+import androidx.paging.PagedList
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import io.hoopit.android.ui.NetworkState
@@ -14,6 +15,7 @@ import io.hoopit.android.ui.databinding.NetworkStateItemBinding
 import io.hoopit.android.ui.extensions.throttleClicks
 import io.reactivex.Observable
 import io.reactivex.ObservableEmitter
+import io.reactivex.subjects.PublishSubject
 
 /**
  * A generic RecyclerView adapter that uses Data Binding & DiffUtil.
@@ -24,6 +26,7 @@ import io.reactivex.ObservableEmitter
 abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
     differ: DiffUtil.ItemCallback<T>,
     private val disableClicks: Boolean = false,
+    private val enableLongClicks: Boolean = false,
     var lifecycleOwner: LifecycleOwner? = null,
     private val endLoadingIndicator: Boolean = true,
     private val frontLoadingIndicator: Boolean = false
@@ -40,9 +43,9 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
     private var frontLoadingState: NetworkState? = null
 
     companion object {
-        const val LAYOUT = 1
-        const val FRONT_LOADING_INDICATOR = 2
-        const val END_LOADING_INDICATOR = 3
+        const val DEFAULT_LAYOUT = 84740
+        const val FRONT_LOADING_INDICATOR = 84741
+        const val END_LOADING_INDICATOR = 84742
     }
 
     /**
@@ -51,6 +54,7 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
      */
     val clicks: Observable<T>
     val retryClicks: Observable<NetworkState>
+    val longClicks = PublishSubject.create<T>()
 
     init {
         clicks = Observable.create<Observable<T?>> {
@@ -78,24 +82,26 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DataBoundViewHolder<*> {
         return when (viewType) {
-            LAYOUT -> DataBoundViewHolder(
-                createBinding(parent)
-            )
+            DEFAULT_LAYOUT -> DataBoundViewHolder(createBinding(parent, defaultLayoutRes))
             FRONT_LOADING_INDICATOR, END_LOADING_INDICATOR -> DataBoundViewHolder(
                 createNetworkBinding(parent)
             )
-            else -> throw IllegalArgumentException("unknown view type $viewType")
+            else -> DataBoundViewHolder(createBinding(parent, getLayoutForViewType(viewType)))
         }
     }
 
-    override fun getItemViewType(position: Int): Int {
+    final override fun getItemViewType(position: Int): Int {
         return if (isLoadingAtEnd() && position == itemCount - getExtraRows()) {
             END_LOADING_INDICATOR
         } else if (isLoadingAtFront() && position == 0) {
             FRONT_LOADING_INDICATOR
         } else {
-            LAYOUT
+            getCustomItemViewType(position)
         }
+    }
+
+    protected open fun getCustomItemViewType(position: Int): Int {
+        return DEFAULT_LAYOUT
     }
 
     open fun updateEndLoadingState(newPagingState: NetworkState?) {
@@ -152,7 +158,7 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
     /**
      * Override this to customize the view binding
      */
-    protected open fun createBinding(parent: ViewGroup): V {
+    protected open fun createBinding(parent: ViewGroup, @LayoutRes layoutRes: Int): V {
         val binding = DataBindingUtil.inflate<V>(
             LayoutInflater.from(parent.context),
             layoutRes,
@@ -163,6 +169,12 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
             val observable = binding.root.throttleClicks().map { map(binding) }
             listItemClickEmitter.let {
                 it?.onNext(observable) ?: listClickObservables.add(observable)
+            }
+        }
+        if (enableLongClicks) {
+            binding.root.setOnLongClickListener {
+                map(binding)?.let(longClicks::onNext)
+                true
             }
         }
         return binding
@@ -183,14 +195,15 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
         return binding
     }
 
+    @LayoutRes
+    protected open fun getLayoutForViewType(viewType: Int): Int {
+        return defaultLayoutRes
+    }
+
     @Suppress("UNCHECKED_CAST", "UnsafeCast")
     override fun onBindViewHolder(holder: DataBoundViewHolder<*>, position: Int) {
         holder.binding.setLifecycleOwner(lifecycleOwner)
         when (getItemViewType(position)) {
-            LAYOUT -> {
-                val actualPosition = if (isLoadingAtFront()) position - 1 else position
-                bind(holder.binding as V, getItem(actualPosition), position)
-            }
             FRONT_LOADING_INDICATOR -> {
                 holder.binding as NetworkStateItemBinding
                 holder.binding.item = frontLoadingState
@@ -198,6 +211,10 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
             END_LOADING_INDICATOR -> {
                 holder.binding as NetworkStateItemBinding
                 holder.binding.item = endLoadingState
+            }
+            else -> {
+                val actualPosition = if (isLoadingAtFront()) position - 1 else position
+                bind(holder.binding as V, getItem(actualPosition), position)
             }
         }
         holder.binding.executePendingBindings()
@@ -212,7 +229,7 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
      * The [LayoutRes] for the RecyclerView item
      * This is used to inflate the view.
      */
-    protected abstract val layoutRes: Int
+    protected abstract val defaultLayoutRes: Int
         @LayoutRes get
 
     /**
