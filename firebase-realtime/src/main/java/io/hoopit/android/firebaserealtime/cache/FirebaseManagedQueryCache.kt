@@ -7,17 +7,19 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.core.view.QuerySpec
+import io.hoopit.android.firebaserealtime.core.FirebaseResource
+import io.hoopit.android.firebaserealtime.core.Scope
 import io.hoopit.android.firebaserealtime.lifecycle.FirebaseCacheLiveData
 import io.hoopit.android.firebaserealtime.paging.QueryCacheChildrenListener
 import io.hoopit.android.firebaserealtime.paging.QueryCacheValueListener
 import kotlin.reflect.KClass
 
-abstract class FirebaseManagedQueryCache<K : Comparable<K>, Type : io.hoopit.android.firebaserealtime.core.FirebaseResource>(
-    private val scope: io.hoopit.android.firebaserealtime.core.Scope,
+abstract class FirebaseManagedQueryCache<K : Comparable<K>, Type : FirebaseResource>(
+    private val scope: Scope,
     val query: Query,
     private val clazz: KClass<Type>,
     orderKeyFunction: (Type) -> K
-) : io.hoopit.android.firebaserealtime.cache.FirebaseQueryCacheBase<K, Type>(query, orderKeyFunction) {
+) : FirebaseQueryCacheBase<K, Type>(query, orderKeyFunction) {
 
     override fun insert(previousId: String?, item: Type) {
         item.scope = scope
@@ -57,7 +59,7 @@ interface IManagedCache {
 }
 
 class FirebaseValueCache<Type : Any>(
-    private val scope: io.hoopit.android.firebaserealtime.core.Scope,
+    private val scope: Scope,
     private val clazz: KClass<Type>
 ) : IManagedCache {
 
@@ -74,7 +76,7 @@ class FirebaseValueCache<Type : Any>(
     fun getLiveData(
         query: Query,
         disconnectDelay: Long,
-        resource: io.hoopit.android.firebaserealtime.core.Scope.Resource = scope.getResource(query)
+        resource: Scope.Resource = scope.getResource(query)
     ): LiveData<Type?> {
         return liveData.getOrPut(query.spec) {
             FirebaseCacheLiveData<Type?>(resource, query, this, disconnectDelay).also {

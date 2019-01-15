@@ -4,23 +4,25 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.Query
 import io.hoopit.android.common.livedata.DelayedDisconnectLiveData
 import io.hoopit.android.firebaserealtime.core.FirebaseChildEventListener
+import io.hoopit.android.firebaserealtime.core.FirebaseCollection
+import io.hoopit.android.firebaserealtime.core.IFirebaseEntity
 import kotlin.reflect.KClass
 
-class FirebaseListLiveData<K : Comparable<K>, T : io.hoopit.android.firebaserealtime.core.IFirebaseEntity>(
+class FirebaseListLiveData<K : Comparable<K>, T : IFirebaseEntity>(
     private val query: Query,
     private val classModel: KClass<out T>,
-    private val collection: io.hoopit.android.firebaserealtime.core.FirebaseCollection<K, T>,
-    disconnectDelay: Long = 2000
+    private val collection: FirebaseCollection<K, T>,
+    disconnectDelay: Long
 ) : DelayedDisconnectLiveData<List<T>>(disconnectDelay) {
 
     constructor(
         query: Query,
         classModel: KClass<out T>,
-        disconnectDelay: Long = 2000,
+        disconnectDelay: Long,
         orderKeyFunction: (T) -> K
     ) : this(
         query, classModel,
-        io.hoopit.android.firebaserealtime.core.FirebaseCollection<K, T>(
+        FirebaseCollection<K, T>(
             orderKeyFunction,
             query.spec.params.isViewFromLeft
         ), disconnectDelay

@@ -1,14 +1,17 @@
 package io.hoopit.android.firebaserealtime.paging
 
 import com.google.firebase.database.Query
+import io.hoopit.android.firebaserealtime.cache.FirebaseManagedQueryCache
+import io.hoopit.android.firebaserealtime.core.FirebaseResource
+import io.hoopit.android.firebaserealtime.core.Scope
 import kotlin.reflect.KClass
 
-class FirebasePagedListQueryCache<K : Comparable<K>, Type : io.hoopit.android.firebaserealtime.core.FirebaseResource>(
-    val scope: io.hoopit.android.firebaserealtime.core.Scope,
+class FirebasePagedListQueryCache<K : Comparable<K>, Type : FirebaseResource>(
+    val scope: Scope,
     query: Query,
     clazz: KClass<Type>,
     orderKeyFunction: (Type) -> K
-) : io.hoopit.android.firebaserealtime.cache.FirebaseManagedQueryCache<K, Type>(scope, query, clazz, orderKeyFunction) {
+) : FirebaseManagedQueryCache<K, Type>(scope, query, clazz, orderKeyFunction) {
 
     private val invalidationListeners = mutableListOf<() -> Unit>()
 
@@ -37,12 +40,16 @@ class FirebasePagedListQueryCache<K : Comparable<K>, Type : io.hoopit.android.fi
         return collection.getBefore(key, limit)
     }
 
+    @Synchronized
     fun addInvalidationListener(listener: () -> Unit) {
         invalidationListeners.add(listener)
     }
 
+    @Synchronized
     override fun invalidate() {
-        invalidationListeners.forEach { it() }
+        invalidationListeners.forEach { function ->
+            function()
+        }
         invalidationListeners.clear()
     }
 }

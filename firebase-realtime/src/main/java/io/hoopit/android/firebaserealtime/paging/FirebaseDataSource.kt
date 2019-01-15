@@ -13,20 +13,24 @@ class FirebaseDataSource<Key : Comparable<Key>, StoreType : io.hoopit.android.fi
         params: LoadInitialParams<Pair<String, Key>>,
         callback: LoadInitialCallback<StoreType>
     ) {
+        Timber.d("called: loadInitial, initialKey: ${params.requestedInitialKey?.second}, requestedLoadSize: ${params.requestedLoadSize}")
         val items = store.getInitial(
             params.requestedInitialKey?.second,
             params.requestedLoadSize
         )
+        store.addInvalidationListener { invalidate() }
 //        callback.onResult(items)
         // TODO: required for placeholder support
         // Position is sometimes -1, which means the store has been modified after store.getInitial was returned
         // Maybe return position as part of store.getInitial(), or find another solution
         val position = items.firstOrNull()?.let { store.indexOf(it) } ?: 0
+        val storeSize = if (items.isEmpty()) 0 else store.size
         callback.onResult(
             items,
             max(position, 0),
-            store.size
+            storeSize
         )
+        Timber.d("finished: LoadInitial, items: ${items.size}, storeSize: $storeSize, position: $position")
     }
 
     override fun loadAfter(

@@ -2,30 +2,32 @@ package io.hoopit.android.firebaserealtime.core
 
 import com.google.firebase.database.Query
 import com.google.firebase.database.core.view.QuerySpec
+import io.hoopit.android.firebaserealtime.cache.FirebaseListQueryCache
+import io.hoopit.android.firebaserealtime.cache.FirebaseValueCache
 import io.hoopit.android.firebaserealtime.paging.FirebasePagedListQueryCache
 import kotlin.reflect.KClass
 
 class FirebaseCache(
-    private val scope: io.hoopit.android.firebaserealtime.core.Scope
+    private val scope: Scope
 ) {
 
-    private val valueCaches = mutableMapOf<KClass<*>, io.hoopit.android.firebaserealtime.cache.FirebaseValueCache<*>>()
+    private val valueCaches = mutableMapOf<KClass<*>, FirebaseValueCache<*>>()
     private val pagedListCache = mutableMapOf<QuerySpec, FirebasePagedListQueryCache<*, *>>()
-    private val listCache =
-        mutableMapOf<QuerySpec, io.hoopit.android.firebaserealtime.cache.FirebaseListQueryCache<*, *>>()
+    private val listCache = mutableMapOf<QuerySpec, FirebaseListQueryCache<*, *>>()
 
     fun dispose(querySpec: QuerySpec) {
         pagedListCache[querySpec]?.dispose()
+        pagedListCache.remove(querySpec)
     }
 
-    fun <T : Any> getCache(clazz: KClass<T>): io.hoopit.android.firebaserealtime.cache.FirebaseValueCache<T> {
+    fun <T : Any> getCache(clazz: KClass<T>): FirebaseValueCache<T> {
         @Suppress("UNCHECKED_CAST")
         return valueCaches.getOrPut(clazz) {
-            io.hoopit.android.firebaserealtime.cache.FirebaseValueCache(scope, clazz)
-        } as io.hoopit.android.firebaserealtime.cache.FirebaseValueCache<T>
+            FirebaseValueCache(scope, clazz)
+        } as FirebaseValueCache<T>
     }
 
-    fun <K : Comparable<K>, T : io.hoopit.android.firebaserealtime.core.FirebaseResource> getOrCreatePagedCache(
+    fun <K : Comparable<K>, T : FirebaseResource> getOrCreatePagedCache(
         query: Query,
         classModel: KClass<T>,
         orderByKey: (T) -> K
@@ -37,14 +39,14 @@ class FirebaseCache(
         } as FirebasePagedListQueryCache<K, T>
     }
 
-    fun <K : Comparable<K>, T : io.hoopit.android.firebaserealtime.core.FirebaseResource> getOrCreateListCache(
+    fun <K : Comparable<K>, T : FirebaseResource> getOrCreateListCache(
         query: Query,
         clazz: KClass<T>,
         orderByKey: (T) -> K
-    ): io.hoopit.android.firebaserealtime.cache.FirebaseListQueryCache<K, T> {
+    ): FirebaseListQueryCache<K, T> {
         @Suppress("UNCHECKED_CAST")
         return listCache.getOrElse(query.spec) {
-            io.hoopit.android.firebaserealtime.cache.FirebaseListQueryCache(
+            FirebaseListQueryCache(
                 scope,
                 query,
                 clazz,
@@ -55,11 +57,11 @@ class FirebaseCache(
                 it,
                 query
             )
-        } as io.hoopit.android.firebaserealtime.cache.FirebaseListQueryCache<K, T>
+        } as FirebaseListQueryCache<K, T>
     }
 
     fun registerListQueryCache(
-        cache: io.hoopit.android.firebaserealtime.cache.FirebaseListQueryCache<*, *>,
+        cache: FirebaseListQueryCache<*, *>,
         query: Query
     ) {
         listCache.getOrPut(query.spec) { cache }

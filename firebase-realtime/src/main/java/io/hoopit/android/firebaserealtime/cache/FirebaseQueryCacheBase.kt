@@ -10,10 +10,10 @@ import io.hoopit.android.firebaserealtime.core.FirebaseCollection
 import io.hoopit.android.firebaserealtime.core.IFirebaseEntity
 import timber.log.Timber
 
-abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : io.hoopit.android.firebaserealtime.core.IFirebaseEntity>(
+abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>(
     private val query: Query,
-    private val orderKeyFunction: (Type) -> K
-) : io.hoopit.android.firebaserealtime.cache.IManagedCache {
+    orderKeyFunction: (Type) -> K
+) : IManagedCache {
 
     override fun onInactive(firebaseCacheLiveData: LiveData<*>, query: Query) {
 //        scope.dispatchDeactivate()
@@ -31,14 +31,12 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : io.hoopit.androi
 
     private val invalidationHandler = Handler(Looper.getMainLooper())
 
-    private var isInvalidatePending = false
-
     private val invalidationTask = Runnable {
         Timber.d("dispatchInvalidate: executing delayed invalidate")
         invalidate()
     }
 
-    protected val collection = io.hoopit.android.firebaserealtime.core.FirebaseCollection(
+    protected val collection = FirebaseCollection(
         orderKeyFunction,
         query.spec.params.isViewFromLeft
     )
@@ -50,29 +48,34 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : io.hoopit.androi
         return collection.indexOf(item)
     }
 
-    protected val items = mutableMapOf<K, MutableLiveData<Type>>()
+    protected val items = mutableMapOf<String, MutableLiveData<Type>>()
 
     open fun insert(previousId: String?, item: Type) {
         collection.addAfter(previousId, item)
-        items[orderKeyFunction(item)]?.postValue(item)
+        items[item.entityId]?.postValue(item)
         dispatchInvalidate()
     }
 
     open fun insertAll(items: Collection<Type>) {
         collection.addAll(items)
-        items.forEach { this.items[orderKeyFunction(it)]?.postValue(it) }
+        items.forEach { this.items[it.entityId]?.postValue(it) }
+        dispatchInvalidate()
+    }
+
+    fun move(previousChildName: String?, child: Type) {
+//        collection.move(previousChildName, child)
         dispatchInvalidate()
     }
 
     open fun update(previousId: String?, item: Type) {
         collection.update(previousId, item)
-        items[orderKeyFunction(item)]?.postValue(item)
+        items[item.entityId]?.postValue(item)
         dispatchInvalidate()
     }
 
     open fun delete(item: Type) {
         val removed = collection.remove(item)
-        items[orderKeyFunction(item)]?.postValue(null)
+        items[item.entityId]?.postValue(null)
         if (removed) dispatchInvalidate()
     }
 
@@ -80,23 +83,25 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : io.hoopit.androi
         return collection.get(it)
     }
 
-    fun getLiveData(it: K): LiveData<Type?> {
-        return items.getOrPut(it) {
-            return liveData(collection.get(it))
+    fun getLiveData(entityId: String): LiveData<Type?> {
+        return items.getOrPut(entityId) {
+            return liveData(collection.singleOrNull { it.entityId == entityId })
+//            return liveData(collection.get(it))
         }
     }
 
     private fun dispatchInvalidate() {
         invalidationHandler.removeCallbacks(invalidationTask)
+        invalidationHandler.postDelayed(invalidationTask, 100)
+        return
         if (query.spec.params.hasLimit() && collection.size == query.spec.params.limit) {
-            // TODO: Dispatch immediately if requested initial size or page size is reached?
+            // TODO: Dispatch immediately if page size is reached?
             Timber.d("dispatchInvalidate: Limit reached, invalidating immediately...")
-            invalidate()
-        } else {
+//            invalidate()
             invalidationHandler.postDelayed(invalidationTask, 100)
+        } else {
         }
     }
 
     protected abstract fun invalidate()
-
 }

@@ -9,14 +9,14 @@ import io.hoopit.android.firebaserealtime.core.FirebaseResource
 import io.hoopit.android.firebaserealtime.core.Scope
 import kotlin.reflect.KClass
 
-abstract class FirebaseDaoBase<K : Comparable<K>, V : io.hoopit.android.firebaserealtime.core.FirebaseResource>(
+abstract class FirebaseDaoBase<K : Comparable<K>, V : FirebaseResource>(
     private val classModel: KClass<V>,
     private val disconnectDelay: Long,
-    private val cacheManager: io.hoopit.android.firebaserealtime.core.FirebaseCache = io.hoopit.android.firebaserealtime.core.Scope.defaultInstance.cache
+    private val cacheManager: FirebaseCache = Scope.defaultInstance.cache
 ) {
 
     private val pagedCacheMap = mutableMapOf<Query, FirebasePagedListQueryCache<K, V>>()
-    private val listCacheMap = mutableMapOf<Query, io.hoopit.android.firebaserealtime.cache.FirebaseListQueryCache<K, V>>()
+    private val listCacheMap = mutableMapOf<Query, FirebaseListQueryCache<K, V>>()
 
     private fun getPagedQueryCache(
         query: Query,
@@ -55,7 +55,7 @@ abstract class FirebaseDaoBase<K : Comparable<K>, V : io.hoopit.android.firebase
         return getPagedQueryCache(query, sortedKeyFunction).getDataSourceFactory()
     }
 
-    protected fun getCachedItem(itemId: K): LiveData<V?> {
+    protected fun getCachedItem(itemId: String): LiveData<V?> {
         // TODO: Improve
 //        return liveData(firebaseConnectionManager.getCachedItem(itemId, classModel))
         listCacheMap.values.forEach {

@@ -6,7 +6,6 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.core.view.QuerySpec
-import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 
 class FirebaseReferenceManager {
@@ -33,7 +32,7 @@ class FirebaseReferenceManager {
 
         @Synchronized
         fun subscribe(query: Query, vararg listeners: ChildEventListener) {
-            Timber.d("called: subscribe: ${query.spec}")
+//            Timber.d("called: subscribe: ${query.spec}")
             numChildEventSubs = subscribeInternal(query, childEventSubs, numChildEventSubs, *listeners) {
                 query.addChildEventListener(childListener)
             }
@@ -41,7 +40,7 @@ class FirebaseReferenceManager {
 
         @Synchronized
         fun subscribe(query: Query, vararg listeners: ValueEventListener) {
-            Timber.d("called: subscribe: ${query.spec}")
+//            Timber.d("called: subscribe: ${query.spec}")
             numValueEventSubs = subscribeInternal(query, valueEventSubs, numValueEventSubs, *listeners) {
                 query.addValueEventListener(valueListener)
             }
@@ -49,7 +48,7 @@ class FirebaseReferenceManager {
 
         @Synchronized
         fun subscribeSingle(query: Query, vararg listeners: ValueEventListener) {
-            Timber.d("called: subscribeSingle: ${query.spec}")
+//            Timber.d("called: subscribeSingle: ${query.spec}")
             numValueEventSubs = subscribeInternal(query, singleValueEventSubs, numValueEventSubs, *listeners) {
                 query.addListenerForSingleValueEvent(valueListener)
             }
@@ -88,7 +87,7 @@ class FirebaseReferenceManager {
             val list = map.getOrPut(query) { mutableListOf() }
             val added = list.addAll(listeners)
             if (added && currentSubs == 0) {
-                Timber.d("called: subscribeInternal: activating: $querySpec")
+//                Timber.d("called: subscribeInternal: activating: $querySpec")
                 activate()
             }
             return currentSubs + listeners.size
@@ -110,7 +109,7 @@ class FirebaseReferenceManager {
                 if (removed == true) --newCount
             }
             if (newCount == 0) {
-                Timber.d("called: unsubscribeInternal: deactivating: $querySpec")
+//                Timber.d("called: unsubscribeInternal: deactivating: $querySpec")
                 deactivate()
             } else if (newCount < 0)
                 throw IllegalStateException("Attempting to unsub with 0 subs: $querySpec")

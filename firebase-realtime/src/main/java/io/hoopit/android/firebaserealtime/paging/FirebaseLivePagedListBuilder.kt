@@ -4,13 +4,13 @@ import androidx.lifecycle.LiveData
 import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
 import com.google.firebase.database.ChildEventListener
+import io.hoopit.android.firebaserealtime.core.FirebaseResource
 import io.hoopit.android.firebaserealtime.lifecycle.FirebaseCacheLiveData
 
-@Suppress("unused")
-class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, RemoteType : io.hoopit.android.firebaserealtime.core.FirebaseResource>(
+class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, RemoteType : FirebaseResource>(
     private val factory: IFirebaseDataSourceFactory<Key, RemoteType, LocalType>,
     private val pagedListConfig: PagedList.Config.Builder,
-    var disconnectDelay: Long = 2000
+    var disconnectDelay: Long
 ) {
 
 //    private val listener = Listener(classModel, factory.store)

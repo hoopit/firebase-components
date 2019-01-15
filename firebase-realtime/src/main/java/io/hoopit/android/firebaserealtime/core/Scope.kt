@@ -9,15 +9,14 @@ import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 
 class Scope(
-    private val referenceManager: io.hoopit.android.firebaserealtime.core.FirebaseReferenceManager
+    private val referenceManager: FirebaseReferenceManager
 ) {
 
-    lateinit var cache: io.hoopit.android.firebaserealtime.core.FirebaseCache
+    lateinit var cache: FirebaseCache
 
     companion object {
-        val defaultInstance = Scope(io.hoopit.android.firebaserealtime.core.FirebaseReferenceManager()).also {
-            it.cache =
-                io.hoopit.android.firebaserealtime.core.FirebaseCache(it)
+        val defaultInstance = Scope(FirebaseReferenceManager()).also {
+            it.cache = FirebaseCache(it)
         }
     }
 
@@ -29,12 +28,12 @@ class Scope(
     }
 
     @Synchronized
-    fun activate(query: Query) {
+    private fun activate(query: Query) {
         getResource(query).dispatchActivate()
     }
 
     @Synchronized
-    fun deactivate(query: Query, disconnectDelay: Long? = null) {
+    private fun deactivate(query: Query, disconnectDelay: Long? = null) {
         if (disconnectDelay != null) scopes[query]?.dispatchDeactivate(disconnectDelay)
         else scopes[query]?.dispatchDeactivate()
     }
@@ -70,12 +69,9 @@ class Scope(
 
         @Synchronized
         fun dispatchDeactivate(disconnectDelay: Long = this.disconnectDelay) {
-//            listener.run()
-//             DEBUG: Remove return
-//            return
             if (disconnectDelay > 0) {
                 pendingRemoval = true
-                handler.postDelayed(listener, 1)
+                handler.postDelayed(listener, disconnectDelay)
             } else {
                 pendingRemoval = false
                 listener.run()
@@ -89,15 +85,15 @@ class Scope(
                 active = true
                 for ((query, listeners) in childListeners) {
                     referenceManager.getReference(query).subscribe(query, *listeners.toTypedArray())
-                    activate(query)
+                    if (rootQuery != query) activate(query)
                 }
                 for ((query, listeners) in valueListeners) {
                     referenceManager.getReference(query).subscribe(query, *listeners.toTypedArray())
-                    activate(query)
+                    if (rootQuery != query) activate(query)
                 }
                 for ((query, listeners) in singleValueListeners) {
                     referenceManager.getReference(query).subscribeSingle(query, *listeners.toTypedArray())
-                    activate(query)
+                    if (rootQuery != query) activate(query)
                 }
             }
         }
@@ -110,15 +106,15 @@ class Scope(
                 active = false
                 for ((query, listeners) in childListeners) {
                     referenceManager.getReference(query).unsubscribe(query, *listeners.toTypedArray())
-                    deactivate(query)
+                    if (rootQuery != query) deactivate(query)
                 }
                 for ((query, listeners) in valueListeners) {
                     referenceManager.getReference(query).unsubscribe(query, *listeners.toTypedArray())
-                    deactivate(query)
+                    if (rootQuery != query) deactivate(query)
                 }
                 for ((query, listeners) in singleValueListeners) {
                     referenceManager.getReference(query).unsubscribe(query, *listeners.toTypedArray())
-                    deactivate(query)
+                    if (rootQuery != query) deactivate(query)
                 }
             }
         }

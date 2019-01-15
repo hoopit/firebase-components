@@ -10,7 +10,7 @@ import kotlin.reflect.KClass
 class FirebaseValueLiveData<T : Any>(
     private val reference: Query,
     private val classModel: KClass<T>,
-    disconnectDelay: Long = 2000
+    disconnectDelay: Long
 ) : DelayedDisconnectLiveData<T>(disconnectDelay), ValueEventListener {
     override fun delayedOnActive() {
         reference.addValueEventListener(this)
@@ -26,4 +26,5 @@ class FirebaseValueLiveData<T : Any>(
         value = snapshot.getValue(classModel.java)
     }
 }
+
 
