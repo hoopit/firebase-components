@@ -22,7 +22,7 @@ inline fun <K : Comparable<K>, reified T : io.hoopit.android.firebaserealtime.co
     crossinline query: () -> Query
 ): Lazy<LiveData<List<T>>> {
     return lazy {
-        scope.cache.getOrCreateListCache(query(), T::class, orderKeyFunction).getLiveData(query(), disconnectDelay)
+        scope.cache.getOrCreateListCache(query(), T::class, orderKeyFunction).getLiveData(disconnectDelay)
     }
 }
 

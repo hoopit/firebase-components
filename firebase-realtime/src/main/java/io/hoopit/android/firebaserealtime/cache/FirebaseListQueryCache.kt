@@ -18,7 +18,6 @@ class FirebaseListQueryCache<K : Comparable<K>, T : FirebaseResource>(
     private var liveData: MutableLiveData<List<T>>? = null
 
     fun getLiveData(
-        query: Query,
         disconnectDelay: Long,
         resource: Scope.Resource = scope.getResource(query)
     ): LiveData<List<T>> {

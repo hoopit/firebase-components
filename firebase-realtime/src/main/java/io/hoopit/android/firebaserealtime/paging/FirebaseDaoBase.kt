@@ -34,7 +34,7 @@ abstract class FirebaseDaoBase<K : Comparable<K>, V : FirebaseResource>(
     private fun getListQueryCache(
         query: Query,
         sortedKeyFunction: (V) -> K
-    ): io.hoopit.android.firebaserealtime.cache.FirebaseListQueryCache<K, V> {
+    ): FirebaseListQueryCache<K, V> {
         return listCacheMap.getOrPut(query) {
             cacheManager.getOrCreateListCache(
                 query,
@@ -45,7 +45,7 @@ abstract class FirebaseDaoBase<K : Comparable<K>, V : FirebaseResource>(
     }
 
     protected fun createList(query: Query, sortedKeyFunction: (V) -> K): LiveData<List<V>> {
-        return getListQueryCache(query, sortedKeyFunction).getLiveData(query, disconnectDelay)
+        return getListQueryCache(query, sortedKeyFunction).getLiveData(disconnectDelay)
     }
 
     protected fun createPagedList(
