@@ -2,6 +2,7 @@ package io.hoopit.android.firebaserealtime.paging
 
 import androidx.lifecycle.LiveData
 import com.google.firebase.database.Query
+import com.google.firebase.database.core.view.QuerySpec
 import io.hoopit.android.common.liveData
 import io.hoopit.android.firebaserealtime.cache.FirebaseListQueryCache
 import io.hoopit.android.firebaserealtime.core.FirebaseCache
@@ -15,14 +16,14 @@ abstract class FirebaseDaoBase<K : Comparable<K>, V : FirebaseResource>(
     private val cacheManager: FirebaseCache = Scope.defaultInstance.cache
 ) {
 
-    private val pagedCacheMap = mutableMapOf<Query, FirebasePagedListQueryCache<K, V>>()
-    private val listCacheMap = mutableMapOf<Query, FirebaseListQueryCache<K, V>>()
+    private val pagedCacheMap = mutableMapOf<QuerySpec, FirebasePagedListQueryCache<K, V>>()
+    private val listCacheMap = mutableMapOf<QuerySpec, FirebaseListQueryCache<K, V>>()
 
     private fun getPagedQueryCache(
         query: Query,
         sortedKeyFunction: (V) -> K
     ): FirebasePagedListQueryCache<K, V> {
-        return pagedCacheMap.getOrPut(query) {
+        return pagedCacheMap.getOrPut(query.spec) {
             cacheManager.getOrCreatePagedCache(
                 query,
                 classModel,
@@ -35,7 +36,7 @@ abstract class FirebaseDaoBase<K : Comparable<K>, V : FirebaseResource>(
         query: Query,
         sortedKeyFunction: (V) -> K
     ): FirebaseListQueryCache<K, V> {
-        return listCacheMap.getOrPut(query) {
+        return listCacheMap.getOrPut(query.spec) {
             cacheManager.getOrCreateListCache(
                 query,
                 classModel,
@@ -44,39 +45,26 @@ abstract class FirebaseDaoBase<K : Comparable<K>, V : FirebaseResource>(
         }
     }
 
-    protected fun createList(query: Query, sortedKeyFunction: (V) -> K): LiveData<List<V>> {
+    protected fun getList(query: Query, sortedKeyFunction: (V) -> K): LiveData<List<V>> {
         return getListQueryCache(query, sortedKeyFunction).getLiveData(disconnectDelay)
     }
 
-    protected fun createPagedList(
+    protected fun getPagedList(
         query: Query,
         sortedKeyFunction: (V) -> K
     ): FirebaseDataSourceFactory<K, V> {
         return getPagedQueryCache(query, sortedKeyFunction).getDataSourceFactory()
     }
 
-    protected fun getCachedItem(itemId: String): LiveData<V?> {
+    protected fun getItem(itemId: String, query: Query?): LiveData<V?> {
         // TODO: Improve
-//        return liveData(firebaseConnectionManager.getCachedItem(itemId, classModel))
-        listCacheMap.values.forEach {
-            return it.getLiveData(itemId)
+        if (query == null) {
+            listCacheMap.values.first {
+                return it.getLiveData(itemId)
+            }
+            return liveData(null)
+        } else {
+            return cacheManager.getItemCache(classModel).getLiveData(query, disconnectDelay)
         }
-//        pagedCacheMap.values.forEach {
-//            val item = it.getLiveData(itemId)
-//            if (item != null) return item
-//        }
-        return liveData(null)
-    }
-
-    protected fun getOrFetchItem(
-        itemId: K,
-        query: Query,
-        cacheOnly: Boolean = true,
-        sortedKeyFunction: (V) -> K
-    ): LiveData<V> {
-        TODO("Not implemented.") // Use value cache
     }
 }
-
-
-

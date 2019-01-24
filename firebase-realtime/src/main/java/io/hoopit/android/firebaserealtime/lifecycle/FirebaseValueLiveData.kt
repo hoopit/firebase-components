@@ -8,15 +8,15 @@ import io.hoopit.android.common.livedata.DelayedDisconnectLiveData
 import kotlin.reflect.KClass
 
 class FirebaseValueLiveData<T : Any>(
-    private val reference: Query,
+    private val query: Query,
     private val classModel: KClass<T>,
     disconnectDelay: Long
-) : DelayedDisconnectLiveData<T>(disconnectDelay), ValueEventListener {
+) : DelayedDisconnectLiveData<T?>(disconnectDelay), ValueEventListener {
     override fun delayedOnActive() {
-        reference.addValueEventListener(this)
+        query.addValueEventListener(this)
     }
 
-    override fun delayedOnInactive() = reference.removeEventListener(this)
+    override fun delayedOnInactive() = query.removeEventListener(this)
 
     override fun onCancelled(error: DatabaseError) {
         TODO("not implemented")

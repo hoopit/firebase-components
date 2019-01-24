@@ -2,21 +2,23 @@ package io.hoopit.android.firebaserealtime.model
 
 import androidx.lifecycle.LiveData
 import com.google.firebase.database.Query
+import io.hoopit.android.firebaserealtime.core.FirebaseResource
+import io.hoopit.android.firebaserealtime.core.IFirebaseEntity
 import io.hoopit.android.firebaserealtime.lifecycle.FirebaseListLiveData
 import io.hoopit.android.firebaserealtime.lifecycle.FirebaseValueLiveData
 import io.hoopit.android.firebaserealtime.paging.FirebaseDataSourceFactory
 import kotlin.reflect.KProperty
 
-inline fun <reified T : Any> io.hoopit.android.firebaserealtime.core.FirebaseResource.firebaseValue(
+inline fun <reified T : Any> FirebaseResource.firebaseValue(
     disconnectDelay: Long = this.disconnectDelay,
     crossinline ref: () -> Query
 ): Lazy<LiveData<T?>> {
     return lazy {
-        scope.cache.getCache(T::class).getLiveData(ref(), disconnectDelay)
+        scope.cache.getItemCache(T::class).getLiveData(ref(), disconnectDelay)
     }
 }
 
-inline fun <K : Comparable<K>, reified T : io.hoopit.android.firebaserealtime.core.FirebaseResource> io.hoopit.android.firebaserealtime.core.FirebaseResource.firebaseList(
+inline fun <K : Comparable<K>, reified T : FirebaseResource> FirebaseResource.firebaseList(
     noinline orderKeyFunction: (T) -> K,
     disconnectDelay: Long = this.disconnectDelay,
     crossinline query: () -> Query
@@ -26,7 +28,7 @@ inline fun <K : Comparable<K>, reified T : io.hoopit.android.firebaserealtime.co
     }
 }
 
-inline fun <K : Comparable<K>, reified T : io.hoopit.android.firebaserealtime.core.FirebaseResource> io.hoopit.android.firebaserealtime.core.FirebaseResource.firebaseCachedPagedList(
+inline fun <K : Comparable<K>, reified T : FirebaseResource> FirebaseResource.firebaseCachedPagedList(
     disconnectDelay: Long,
     noinline orderKeyFunction: (T) -> K,
     crossinline query: () -> Query
@@ -39,13 +41,13 @@ inline fun <K : Comparable<K>, reified T : io.hoopit.android.firebaserealtime.co
 inline fun <reified T : Any> firebaseValue(
     disconnectDelay: Long,
     crossinline ref: () -> Query
-): Lazy<LiveData<T>> {
+): Lazy<LiveData<T?>> {
     return lazy {
         FirebaseValueLiveData(ref(), T::class, disconnectDelay)
     }
 }
 
-inline fun <K : Comparable<K>, reified T : io.hoopit.android.firebaserealtime.core.IFirebaseEntity> firebaseList(
+inline fun <K : Comparable<K>, reified T : IFirebaseEntity> firebaseList(
     disconnectDelay: Long,
     noinline orderKeyFunction: (T) -> K,
     crossinline query: () -> Query

@@ -1,15 +1,9 @@
 package io.hoopit.android.firebaserealtime.cache
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.Query
-import com.google.firebase.database.ValueEventListener
-import com.google.firebase.database.core.view.QuerySpec
 import io.hoopit.android.firebaserealtime.core.FirebaseResource
 import io.hoopit.android.firebaserealtime.core.Scope
-import io.hoopit.android.firebaserealtime.lifecycle.FirebaseCacheLiveData
 import io.hoopit.android.firebaserealtime.paging.QueryCacheChildrenListener
 import io.hoopit.android.firebaserealtime.paging.QueryCacheValueListener
 import kotlin.reflect.KClass
@@ -56,50 +50,5 @@ interface IManagedCache {
     fun onInactive(firebaseCacheLiveData: LiveData<*>, query: Query)
     fun onActive(firebaseCacheLiveData: LiveData<*>, query: Query)
     fun dispose()
-}
-
-class FirebaseValueCache<Type : Any>(
-    private val scope: Scope,
-    private val clazz: KClass<Type>
-) : IManagedCache {
-
-    override fun dispose() {
-        TODO("not implemented")
-    }
-
-    private val liveData = mutableMapOf<QuerySpec, LiveData<Type?>>()
-
-    fun get(query: Query): Type? {
-        return liveData[query.spec]?.value
-    }
-
-    fun getLiveData(
-        query: Query,
-        disconnectDelay: Long,
-        resource: Scope.Resource = scope.getResource(query)
-    ): LiveData<Type?> {
-        return liveData.getOrPut(query.spec) {
-            FirebaseCacheLiveData<Type?>(resource, query, this, disconnectDelay).also {
-                if (resource.rootQuery == query)
-                    resource.addListener(Listener(clazz, it))
-            }
-        }
-    }
-
-    override fun onInactive(firebaseCacheLiveData: LiveData<*>, query: Query) {}
-
-    override fun onActive(firebaseCacheLiveData: LiveData<*>, query: Query) {}
-
-    private class Listener<T : Any>(private val clazz: KClass<T>, private val liveData: MutableLiveData<T?>) :
-        ValueEventListener {
-
-        override fun onCancelled(p0: DatabaseError) {
-            TODO("not implemented")
-        }
-
-        override fun onDataChange(snapshot: DataSnapshot) {
-            liveData.postValue(snapshot.getValue(clazz.java))
-        }
-    }
 }
 

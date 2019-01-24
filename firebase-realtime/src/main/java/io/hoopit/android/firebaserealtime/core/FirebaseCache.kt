@@ -11,7 +11,7 @@ class FirebaseCache(
     private val scope: Scope
 ) {
 
-    private val valueCaches = mutableMapOf<KClass<*>, FirebaseValueCache<*>>()
+    private val itemCaches = mutableMapOf<KClass<*>, FirebaseValueCache<*>>()
     private val pagedListCache = mutableMapOf<QuerySpec, FirebasePagedListQueryCache<*, *>>()
     private val listCache = mutableMapOf<QuerySpec, FirebaseListQueryCache<*, *>>()
 
@@ -20,9 +20,9 @@ class FirebaseCache(
         pagedListCache.remove(querySpec)
     }
 
-    fun <T : Any> getCache(clazz: KClass<T>): FirebaseValueCache<T> {
+    fun <T : Any> getItemCache(clazz: KClass<T>): FirebaseValueCache<T> {
         @Suppress("UNCHECKED_CAST")
-        return valueCaches.getOrPut(clazz) {
+        return itemCaches.getOrPut(clazz) {
             FirebaseValueCache(scope, clazz)
         } as FirebaseValueCache<T>
     }

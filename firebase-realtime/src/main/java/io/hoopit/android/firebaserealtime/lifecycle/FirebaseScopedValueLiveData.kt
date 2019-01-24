@@ -10,9 +10,9 @@ import kotlin.reflect.KClass
 
 class FirebaseScopedValueLiveData<T : Any>(
     query: Query,
-    resource: io.hoopit.android.firebaserealtime.core.Scope.Resource,
+    resource: Scope.Resource,
     private val clazz: KClass<T>,
-    cache: io.hoopit.android.firebaserealtime.cache.IManagedCache? = null,
+    cache: IManagedCache? = null,
     disconnectDelay: Long
 ) : FirebaseCacheLiveData<T>(resource, query, cache, disconnectDelay), ValueEventListener {
 
@@ -27,5 +27,4 @@ class FirebaseScopedValueLiveData<T : Any>(
     override fun onDataChange(snapshot: DataSnapshot) {
         value = snapshot.getValue(clazz.java)
     }
-
 }

@@ -13,7 +13,7 @@ interface IFirebaseEntity {
 
 abstract class FirebaseResource(val disconnectDelay: Long) : IFirebaseEntity {
     override lateinit var entityId: String
-    lateinit var scope: io.hoopit.android.firebaserealtime.core.Scope
+    lateinit var scope: Scope
     lateinit var query: Query
 }
 
