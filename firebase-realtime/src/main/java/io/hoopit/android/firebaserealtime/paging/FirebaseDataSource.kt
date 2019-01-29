@@ -6,7 +6,7 @@ import kotlin.math.max
 
 class FirebaseDataSource<Key : Comparable<Key>, StoreType : io.hoopit.android.firebaserealtime.core.FirebaseResource>(
     private val keyFunction: (StoreType) -> Key,
-    private val store: FirebasePagedListQueryCache<Key, StoreType>
+    private val store: FirebasePagedListCache<Key, StoreType>
 ) : ItemKeyedDataSource<Pair<String, Key>, StoreType>() {
 
     override fun loadInitial(
@@ -25,12 +25,12 @@ class FirebaseDataSource<Key : Comparable<Key>, StoreType : io.hoopit.android.fi
         // Maybe return position as part of store.getInitial(), or find another solution
         val position = items.firstOrNull()?.let { store.indexOf(it) } ?: 0
         val storeSize = if (items.isEmpty()) 0 else store.size
-        callback.onResult(
-            items,
-            max(position, 0),
-            storeSize
-        )
-        Timber.d("finished: LoadInitial, items: ${items.size}, storeSize: $storeSize, position: $position")
+        Timber.d("callback.onResult: LoadInitial, items: ${items.size}, storeSize: $storeSize, position: $position")
+        try {
+            callback.onResult(items, max(position, 0), storeSize)
+        } catch (e: IllegalArgumentException) {
+            Timber.e(e)
+        }
     }
 
     override fun loadAfter(

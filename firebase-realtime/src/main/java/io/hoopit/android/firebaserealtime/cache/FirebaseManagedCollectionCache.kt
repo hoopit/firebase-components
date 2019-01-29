@@ -8,36 +8,46 @@ import io.hoopit.android.firebaserealtime.paging.QueryCacheChildrenListener
 import io.hoopit.android.firebaserealtime.paging.QueryCacheValueListener
 import kotlin.reflect.KClass
 
-abstract class FirebaseManagedQueryCache<K : Comparable<K>, Type : FirebaseResource>(
+abstract class FirebaseManagedCollectionCache<K : Comparable<K>, Type : FirebaseResource>(
     private val scope: Scope,
     val query: Query,
     private val clazz: KClass<Type>,
     orderKeyFunction: (Type) -> K
-) : FirebaseQueryCacheBase<K, Type>(query, orderKeyFunction) {
+) : FirebaseCollectionCacheBase<K, Type>(query, orderKeyFunction), IManagedCache {
+
+    override fun onInactive(firebaseCacheLiveData: LiveData<*>, query: Query) {
+//        scope.dispatchDeactivate()
+    }
+
+    override fun onActive(firebaseCacheLiveData: LiveData<*>, query: Query) {
+//        scope.dispatchActivate()
+    }
+
+    override fun dispose() {
+        //TODO: Improve
+        collection.clear()
+        invalidate()
+    }
 
     override fun insert(previousId: String?, item: Type) {
-        item.scope = scope
-        item.query = query
+        item.init(scope, query)
         super.insert(previousId, item)
     }
 
     override fun insertAll(items: Collection<Type>) {
         items.forEach {
-            it.scope = scope
-            it.query = query
+            it.init(scope, query)
         }
         super.insertAll(items)
     }
 
     override fun update(previousId: String?, item: Type) {
-        item.scope = scope
-        item.query = query
+        item.init(scope, query)
         super.update(previousId, item)
     }
 
     override fun delete(item: Type) {
-        item.scope = scope
-        item.query = query
+        item.init(scope, query)
         super.delete(item)
     }
 
@@ -45,10 +55,3 @@ abstract class FirebaseManagedQueryCache<K : Comparable<K>, Type : FirebaseResou
 
     fun getValueListener() = QueryCacheValueListener(this, clazz)
 }
-
-interface IManagedCache {
-    fun onInactive(firebaseCacheLiveData: LiveData<*>, query: Query)
-    fun onActive(firebaseCacheLiveData: LiveData<*>, query: Query)
-    fun dispose()
-}
-

@@ -10,6 +10,7 @@ import com.google.firebase.database.core.view.QuerySpec
 import io.hoopit.android.firebaserealtime.core.FirebaseResource
 import io.hoopit.android.firebaserealtime.core.Scope
 import io.hoopit.android.firebaserealtime.lifecycle.FirebaseCacheLiveData
+import timber.log.Timber
 import kotlin.reflect.KClass
 
 class FirebaseValueCache<Type : Any>(
@@ -18,7 +19,8 @@ class FirebaseValueCache<Type : Any>(
 ) : IManagedCache {
 
     override fun dispose() {
-        TODO("not implemented")
+        liveData.clear()
+        // TODO: Do we need to do more cleanup?
     }
 
     private val liveData = mutableMapOf<QuerySpec, LiveData<Type?>>()
@@ -54,16 +56,15 @@ class FirebaseValueCache<Type : Any>(
         private val liveData: MutableLiveData<Type?>
     ) : ValueEventListener {
 
-        override fun onCancelled(p0: DatabaseError) {
-            TODO("not implemented")
+        override fun onCancelled(error: DatabaseError) {
+            Timber.w(error.toException())
         }
 
         override fun onDataChange(snapshot: DataSnapshot) {
             val item = snapshot.getValue(clazz.java)
             if (item is FirebaseResource) {
                 item.entityId = requireNotNull(snapshot.key)
-                item.scope = scope
-                item.query = query
+                item.init(scope, query)
             }
             liveData.postValue(item)
         }

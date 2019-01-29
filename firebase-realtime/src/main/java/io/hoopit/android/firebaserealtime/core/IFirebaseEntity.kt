@@ -8,13 +8,17 @@ import com.google.firebase.database.Query
  */
 interface IFirebaseEntity {
     var entityId: String
-
 }
 
 abstract class FirebaseResource(val disconnectDelay: Long) : IFirebaseEntity {
     override lateinit var entityId: String
     lateinit var scope: Scope
     lateinit var query: Query
+
+    fun init(scope: Scope, query: Query) {
+        this.scope = scope
+        this.query = query
+    }
 }
 
 interface IFirebaseQuery {

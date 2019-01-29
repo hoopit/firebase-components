@@ -10,25 +10,13 @@ import io.hoopit.android.firebaserealtime.core.FirebaseCollection
 import io.hoopit.android.firebaserealtime.core.IFirebaseEntity
 import timber.log.Timber
 
-abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>(
+/**
+ * Base class for Firebase collection caches.
+ */
+abstract class FirebaseCollectionCacheBase<K : Comparable<K>, Type : IFirebaseEntity>(
     private val query: Query,
     orderKeyFunction: (Type) -> K
-) : IManagedCache {
-
-    override fun onInactive(firebaseCacheLiveData: LiveData<*>, query: Query) {
-//        scope.dispatchDeactivate()
-    }
-
-    override fun onActive(firebaseCacheLiveData: LiveData<*>, query: Query) {
-//        scope.dispatchActivate()
-    }
-
-    override fun dispose() {
-        collection.clear()
-        invalidate()
-//        TODO("not implemented")
-    }
-
+) {
     private val invalidationHandler = Handler(Looper.getMainLooper())
 
     private val invalidationTask = Runnable {
@@ -63,8 +51,7 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>
     }
 
     fun move(previousChildName: String?, child: Type) {
-//        collection.move(previousChildName, child)
-        dispatchInvalidate()
+        if (collection.move(previousChildName, child)) dispatchInvalidate()
     }
 
     open fun update(previousId: String?, item: Type) {
@@ -73,7 +60,16 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>
         dispatchInvalidate()
     }
 
+    /**
+     * Whether remove requests should be ignored. Can be used to handle cases where the query has a limit,
+     * and items are removed due to being pushed outside the limits of the query due to new entries being added.
+     */
+    protected open fun shouldIgnoreRemove(item: Type): Boolean {
+        return query.spec.params.hasAnchoredLimit()
+    }
+
     open fun delete(item: Type) {
+        if (shouldIgnoreRemove(item)) return
         val removed = collection.remove(item)
         items[item.entityId]?.postValue(null)
         if (removed) dispatchInvalidate()
@@ -83,16 +79,15 @@ abstract class FirebaseQueryCacheBase<K : Comparable<K>, Type : IFirebaseEntity>
         return collection.get(it)
     }
 
-    fun getLiveData(entityId: String): LiveData<Type?> {
+    fun getItem(entityId: String): LiveData<Type?> {
         return items.getOrPut(entityId) {
             return liveData(collection.singleOrNull { it.entityId == entityId })
-//            return liveData(collection.get(it))
         }
     }
 
     private fun dispatchInvalidate() {
         invalidationHandler.removeCallbacks(invalidationTask)
-        invalidationHandler.postDelayed(invalidationTask, 100)
+        invalidationHandler.postDelayed(invalidationTask, 200)
         return
         if (query.spec.params.hasLimit() && collection.size == query.spec.params.limit) {
             // TODO: Dispatch immediately if page size is reached?

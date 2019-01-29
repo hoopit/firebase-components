@@ -6,13 +6,13 @@ import io.hoopit.android.firebaserealtime.core.FirebaseResource
 
 abstract class IFirebaseDataSourceFactory<Key : Comparable<Key>, StoreType : FirebaseResource, MappingType : Any> :
     DataSource.Factory<Pair<String, Key>, MappingType>() {
-    abstract val cache: FirebasePagedListQueryCache<Key, StoreType>
+    abstract val cache: FirebasePagedListCache<Key, StoreType>
     abstract val query: Query
     abstract val keyFunction: (MappingType) -> Key
 }
 
 class FirebaseDataSourceFactory<Key : Comparable<Key>, Type : FirebaseResource>(
-    override val cache: FirebasePagedListQueryCache<Key, Type>,
+    override val cache: FirebasePagedListCache<Key, Type>,
     override val query: Query,
     override val keyFunction: (Type) -> Key
 ) : IFirebaseDataSourceFactory<Key, Type, Type>() {

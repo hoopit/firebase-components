@@ -3,7 +3,7 @@ package io.hoopit.android.firebaserealtime.paging
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
-import io.hoopit.android.firebaserealtime.cache.FirebaseQueryCacheBase
+import io.hoopit.android.firebaserealtime.cache.FirebaseCollectionCacheBase
 import io.hoopit.android.firebaserealtime.core.FirebaseChildEventListener
 import io.hoopit.android.firebaserealtime.core.IFirebaseEntity
 import timber.log.Timber
@@ -16,13 +16,13 @@ interface IQueryCacheListener {
 
 class QueryCacheChildrenListener<RemoteType : IFirebaseEntity>(
     clazz: KClass<RemoteType>,
-    private val cache: FirebaseQueryCacheBase<*, RemoteType>
+    private val cache: FirebaseCollectionCacheBase<*, RemoteType>
 ) : FirebaseChildEventListener<RemoteType>(clazz), IQueryCacheListener {
 
     private val count = AtomicInteger()
 
     override fun cancelled(error: DatabaseError) {
-        TODO("not implemented")
+        Timber.e(error.toException())
     }
 
     override fun childMoved(previousChildName: String?, child: RemoteType) {
@@ -56,12 +56,12 @@ class QueryCacheChildrenListener<RemoteType : IFirebaseEntity>(
 }
 
 class QueryCacheValueListener<RemoteType : IFirebaseEntity>(
-    private val cache: FirebaseQueryCacheBase<*, RemoteType>,
+    private val cache: FirebaseCollectionCacheBase<*, RemoteType>,
     private val clazz: KClass<RemoteType>
 ) : ValueEventListener, IQueryCacheListener {
 
-    override fun onCancelled(p0: DatabaseError) {
-        TODO("not implemented")
+    override fun onCancelled(error: DatabaseError) {
+        Timber.e(error.toException())
     }
 
     @Synchronized

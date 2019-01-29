@@ -8,12 +8,12 @@ import io.hoopit.android.firebaserealtime.core.Scope
 import io.hoopit.android.firebaserealtime.lifecycle.FirebaseCacheLiveData
 import kotlin.reflect.KClass
 
-class FirebaseListQueryCache<K : Comparable<K>, T : FirebaseResource>(
+class FirebaseListCache<K : Comparable<K>, T : FirebaseResource>(
     private val scope: Scope,
     query: Query,
     clazz: KClass<T>,
     orderKeyFunction: (T) -> K
-) : FirebaseManagedQueryCache<K, T>(scope, query, clazz, orderKeyFunction) {
+) : FirebaseManagedCollectionCache<K, T>(scope, query, clazz, orderKeyFunction) {
 
     private var liveData: MutableLiveData<List<T>>? = null
 

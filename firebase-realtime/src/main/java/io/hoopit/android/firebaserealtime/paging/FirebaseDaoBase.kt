@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import com.google.firebase.database.Query
 import com.google.firebase.database.core.view.QuerySpec
 import io.hoopit.android.common.liveData
-import io.hoopit.android.firebaserealtime.cache.FirebaseListQueryCache
+import io.hoopit.android.firebaserealtime.cache.FirebaseListCache
 import io.hoopit.android.firebaserealtime.core.FirebaseCache
 import io.hoopit.android.firebaserealtime.core.FirebaseResource
 import io.hoopit.android.firebaserealtime.core.Scope
@@ -16,13 +16,13 @@ abstract class FirebaseDaoBase<K : Comparable<K>, V : FirebaseResource>(
     private val cacheManager: FirebaseCache = Scope.defaultInstance.cache
 ) {
 
-    private val pagedCacheMap = mutableMapOf<QuerySpec, FirebasePagedListQueryCache<K, V>>()
-    private val listCacheMap = mutableMapOf<QuerySpec, FirebaseListQueryCache<K, V>>()
+    private val pagedCacheMap = mutableMapOf<QuerySpec, FirebasePagedListCache<K, V>>()
+    private val listCacheMap = mutableMapOf<QuerySpec, FirebaseListCache<K, V>>()
 
     private fun getPagedQueryCache(
         query: Query,
         sortedKeyFunction: (V) -> K
-    ): FirebasePagedListQueryCache<K, V> {
+    ): FirebasePagedListCache<K, V> {
         return pagedCacheMap.getOrPut(query.spec) {
             cacheManager.getOrCreatePagedCache(
                 query,
@@ -35,7 +35,7 @@ abstract class FirebaseDaoBase<K : Comparable<K>, V : FirebaseResource>(
     private fun getListQueryCache(
         query: Query,
         sortedKeyFunction: (V) -> K
-    ): FirebaseListQueryCache<K, V> {
+    ): FirebaseListCache<K, V> {
         return listCacheMap.getOrPut(query.spec) {
             cacheManager.getOrCreateListCache(
                 query,
@@ -57,10 +57,10 @@ abstract class FirebaseDaoBase<K : Comparable<K>, V : FirebaseResource>(
     }
 
     protected fun getItem(itemId: String, query: Query?): LiveData<V?> {
-        // TODO: Improve
+        // TODO: Implement get single item from list
         if (query == null) {
             listCacheMap.values.first {
-                return it.getLiveData(itemId)
+                return it.getItem(itemId)
             }
             return liveData(null)
         } else {

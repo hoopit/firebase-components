@@ -23,12 +23,12 @@ private constructor(
     }
 
     fun getAfter(key: K, limit: Int): List<V> {
-        val list = key.let { map.tailMap(it, false).values } ?: map.values
+        val list = key.let { map.tailMap(it, false).values }
         return list.take(limit).toList()
     }
 
     fun getBefore(key: K, limit: Int): List<V> {
-        val list = key.let { map.headMap(it, false).values } ?: map.values
+        val list = key.let { map.headMap(it, false).values }
         return list.toList().takeLast(limit)
     }
 
@@ -70,8 +70,9 @@ private constructor(
         items.forEach { map[orderKeyFunction(it)] = it }
     }
 
-    fun move(previousChildName: String?, child: V) {
-        TODO("not implemented")
+    fun move(previousChildName: String?, child: V): Boolean {
+        // Do nothing, because the move is handled by the subsequent change event
+        return false
     }
 }
 //
