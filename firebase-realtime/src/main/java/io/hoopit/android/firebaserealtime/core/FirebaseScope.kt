@@ -121,7 +121,7 @@ class FirebaseScope(
 
         @Synchronized
         fun addSubQuery(query: Query, listener: ChildEventListener) {
-            Timber.d("called: addQuery: ${query.spec}")
+            Timber.d("called: addSubQuery: ${query.spec}")
             childListeners.getOrPut(query) { mutableListOf() }.add(listener).also {
                 if (active) {
                     Timber.d("addQuery: activating listener immediately..")
@@ -133,7 +133,7 @@ class FirebaseScope(
 
         @Synchronized
         fun addSubQuery(query: Query, listener: ValueEventListener, once: Boolean = false) {
-            Timber.d("called: addQuery: ${query.spec}")
+            Timber.d("called: addSubQuery: ${query.spec}")
             if (once) singleValueListeners.getOrPut(query) { mutableListOf() }.add(listener)
             else valueListeners.getOrPut(query) { mutableListOf() }.add(listener)
             if (active) {

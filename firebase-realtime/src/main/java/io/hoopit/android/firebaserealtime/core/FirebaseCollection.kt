@@ -1,5 +1,6 @@
 package io.hoopit.android.firebaserealtime.core
 
+import timber.log.Timber
 import java.util.concurrent.ConcurrentSkipListMap
 
 class FirebaseCollection<K : Comparable<K>, V : IFirebaseEntity>
@@ -18,29 +19,36 @@ private constructor(
     }, ascending, orderKeyFunction)
 
     fun getAround(key: K?, limit: Int): List<V> {
+        Timber.d("called: getAround")
         val list = key?.let { map.tailMap(it, true).values } ?: map.values
         return list.take(limit).toList()
     }
 
     fun getAfter(key: K, limit: Int): List<V> {
+        Timber.d("called: getAfter")
         val list = key.let { map.tailMap(it, false).values }
         return list.take(limit).toList()
     }
 
     fun getBefore(key: K, limit: Int): List<V> {
+        Timber.d("called: getBefore")
         val list = key.let { map.headMap(it, false).values }
         return list.toList().takeLast(limit)
     }
 
+    @Synchronized
     fun addAfter(id: String?, item: V) {
+        Timber.d("called: addAfter")
         map[orderKeyFunction(item)] = item
     }
 
+    @Synchronized
     fun update(previousItemId: String?, item: V) {
+        Timber.d("called: update")
 //        val oldValue = map.replace(orderKeyFunction(item), item)
 //        if (oldValue != null) return
         if (previousItemId == null) {
-            map.remove(map.firstKey())
+            map.remove(map.lastKey())
             map[orderKeyFunction(item)] = item
         } else {
             val currentKey = map.entries.first { (_, value) -> value.entityId == previousItemId }.key
@@ -54,7 +62,9 @@ private constructor(
         }
     }
 
+    @Synchronized
     fun remove(item: V): Boolean {
+        Timber.d("called: remove")
         return map.remove(orderKeyFunction(item)) != null
     }
 
@@ -63,19 +73,23 @@ private constructor(
     }
 
     fun clear() {
+        Timber.d("called: clear")
         map.clear()
     }
 
     fun addAll(items: Collection<V>) {
+        Timber.d("called: addAll")
         items.forEach { map[orderKeyFunction(it)] = it }
     }
 
     fun move(previousChildName: String?, child: V): Boolean {
+        Timber.d("called: move")
         // Do nothing, because the move is handled by the subsequent change event
         return false
     }
 
     fun position(item: V): Int {
+        Timber.d("called: position")
         return map.keys.indexOf(orderKeyFunction(item))
     }
 }

@@ -23,9 +23,11 @@ class FirebaseListCache<K : Comparable<K>, T : FirebaseResource>(
     ): LiveData<List<T>> {
         if (liveData == null) {
             liveData =
-                FirebaseCacheLiveData<List<T>>(firebaseScope.getResource(query), query, this, disconnectDelay).also {
-                if (resource.rootQuery == query) resource.addListener(getChildListener())
-            }
+                FirebaseCacheLiveData<List<T>>(
+                    firebaseScope.getResource(query), query, this, disconnectDelay
+                ).also {
+                    if (resource.rootQuery == query) resource.addListener(getChildListener())
+                }
         }
         return requireNotNull(liveData)
     }

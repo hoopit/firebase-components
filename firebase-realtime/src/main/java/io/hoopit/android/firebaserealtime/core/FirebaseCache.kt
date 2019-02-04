@@ -46,26 +46,15 @@ class FirebaseCache(
     ): FirebaseListCache<K, T> {
         @Suppress("UNCHECKED_CAST")
         return listCache.getOrElse(query.spec) {
-            FirebaseListCache(
-                firebaseScope,
-                query,
-                clazz,
-                orderByKey
-            )
+            FirebaseListCache(firebaseScope, query, clazz, orderByKey)
         }.also {
-            registerListQueryCache(
-                it,
-                query
-            )
+            registerListQueryCache(it, query)
         } as FirebaseListCache<K, T>
     }
 
-    fun registerListQueryCache(
-        cache: FirebaseListCache<*, *>,
-        query: Query
-    ) {
+    private fun registerListQueryCache(cache: FirebaseListCache<*, *>, query: Query) {
         listCache.getOrPut(query.spec) { cache }
-        val scope = firebaseScope.getResource(cache.query)
-        return scope.addListener(cache.getChildListener())
+//        val scope = firebaseScope.getResource(cache.query)
+//        scope.addListener(cache.getChildListener())
     }
 }
