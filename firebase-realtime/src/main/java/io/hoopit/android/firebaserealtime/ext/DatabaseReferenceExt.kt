@@ -15,15 +15,21 @@ fun <V> DatabaseReference.updateChildren(vararg pairs: Pair<Query, V>): Task<Voi
     return this.updateChildren(updatesOf(*pairs))
 }
 
-fun Query.addChildEventListener(listener: ChildEventListener, scope: io.hoopit.android.firebaserealtime.core.Scope) {
-    scope.getResource(this).apply {
+fun Query.addChildEventListener(
+    listener: ChildEventListener,
+    firebaseScope: io.hoopit.android.firebaserealtime.core.FirebaseScope
+) {
+    firebaseScope.getResource(this).apply {
         addListener(listener)
         dispatchActivate()
     }
 }
 
-fun Query.addValueEventListener(listener: ValueEventListener, scope: io.hoopit.android.firebaserealtime.core.Scope) {
-    scope.getResource(this).apply {
+fun Query.addValueEventListener(
+    listener: ValueEventListener,
+    firebaseScope: io.hoopit.android.firebaserealtime.core.FirebaseScope
+) {
+    firebaseScope.getResource(this).apply {
         addListener(listener)
         dispatchActivate()
     }
@@ -31,14 +37,14 @@ fun Query.addValueEventListener(listener: ValueEventListener, scope: io.hoopit.a
 
 fun Query.addListenerForSingleValueEvent(
     listener: ValueEventListener,
-    scope: io.hoopit.android.firebaserealtime.core.Scope
+    firebaseScope: io.hoopit.android.firebaserealtime.core.FirebaseScope
 ) {
-    scope.getResource(this).apply {
+    firebaseScope.getResource(this).apply {
         addListener(listener, once = true)
         dispatchActivate()
     }
 }
 
-inline fun <reified T : Any> Query.liveData(disconnectDelay: Long = 0): FirebaseValueLiveData<T> {
+inline fun <reified T : Any> Query.asLiveData(disconnectDelay: Long = 0): FirebaseValueLiveData<T> {
     return FirebaseValueLiveData(this, T::class, disconnectDelay)
 }

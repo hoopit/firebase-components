@@ -14,7 +14,7 @@ inline fun <reified T : Any> FirebaseResource.firebaseValue(
     crossinline ref: () -> Query
 ): Lazy<LiveData<T?>> {
     return lazy {
-        scope.cache.getItemCache(T::class).getLiveData(ref(), disconnectDelay)
+        firebaseScope.firebaseCache.getItemCache(T::class).getLiveData(ref(), disconnectDelay)
     }
 }
 
@@ -24,7 +24,8 @@ inline fun <K : Comparable<K>, reified T : FirebaseResource> FirebaseResource.fi
     crossinline query: () -> Query
 ): Lazy<LiveData<List<T>>> {
     return lazy {
-        scope.cache.getOrCreateListCache(query(), T::class, orderKeyFunction).getLiveData(disconnectDelay)
+        firebaseScope.firebaseCache.getOrCreateListCache(query(), T::class, orderKeyFunction)
+            .getLiveData(disconnectDelay)
     }
 }
 
@@ -34,7 +35,7 @@ inline fun <K : Comparable<K>, reified T : FirebaseResource> FirebaseResource.fi
     crossinline query: () -> Query
 ): Lazy<FirebaseDataSourceFactory<K, T>> {
     return lazy {
-        scope.cache.getOrCreatePagedCache(query(), T::class, orderKeyFunction).getDataSourceFactory()
+        firebaseScope.firebaseCache.getOrCreatePagedCache(query(), T::class, orderKeyFunction).getDataSourceFactory()
     }
 }
 
@@ -48,8 +49,8 @@ inline fun <reified T : Any> firebaseValue(
 }
 
 inline fun <K : Comparable<K>, reified T : IFirebaseEntity> firebaseList(
-    disconnectDelay: Long,
     noinline orderKeyFunction: (T) -> K,
+    disconnectDelay: Long,
     crossinline query: () -> Query
 ): Lazy<FirebaseListLiveData<K, T>> {
     return lazy {

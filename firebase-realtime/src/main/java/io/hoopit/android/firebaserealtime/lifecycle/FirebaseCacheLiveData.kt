@@ -3,10 +3,10 @@ package io.hoopit.android.firebaserealtime.lifecycle
 import androidx.lifecycle.MediatorLiveData
 import com.google.firebase.database.Query
 import io.hoopit.android.firebaserealtime.cache.IManagedCache
-import io.hoopit.android.firebaserealtime.core.Scope
+import io.hoopit.android.firebaserealtime.core.FirebaseScope
 
 open class FirebaseCacheLiveData<Type>(
-    private val resource: Scope.Resource,
+    private val resource: FirebaseScope.Resource,
     private val query: Query,
     private val cache: IManagedCache?,
     private val disconnectDelay: Long

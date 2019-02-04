@@ -65,7 +65,9 @@ abstract class FirebaseCollectionCacheBase<K : Comparable<K>, Type : IFirebaseEn
      * and items are removed due to being pushed outside the limits of the query due to new entries being added.
      */
     protected open fun shouldIgnoreRemove(item: Type): Boolean {
-        return query.spec.params.hasAnchoredLimit()
+        if (!query.spec.params.hasAnchoredLimit()) return false
+        val pos = collection.position(item)
+        return (pos % query.spec.params.limit == 0 || (pos == collection.size && pos > query.spec.params.limit))
     }
 
     open fun delete(item: Type) {
@@ -87,7 +89,7 @@ abstract class FirebaseCollectionCacheBase<K : Comparable<K>, Type : IFirebaseEn
 
     private fun dispatchInvalidate() {
         invalidationHandler.removeCallbacks(invalidationTask)
-        invalidationHandler.postDelayed(invalidationTask, 200)
+        invalidationHandler.postDelayed(invalidationTask, 250)
         return
         if (query.spec.params.hasLimit() && collection.size == query.spec.params.limit) {
             // TODO: Dispatch immediately if page size is reached?

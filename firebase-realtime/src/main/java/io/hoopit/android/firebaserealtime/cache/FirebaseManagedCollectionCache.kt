@@ -3,13 +3,13 @@ package io.hoopit.android.firebaserealtime.cache
 import androidx.lifecycle.LiveData
 import com.google.firebase.database.Query
 import io.hoopit.android.firebaserealtime.core.FirebaseResource
-import io.hoopit.android.firebaserealtime.core.Scope
+import io.hoopit.android.firebaserealtime.core.FirebaseScope
 import io.hoopit.android.firebaserealtime.paging.QueryCacheChildrenListener
 import io.hoopit.android.firebaserealtime.paging.QueryCacheValueListener
 import kotlin.reflect.KClass
 
 abstract class FirebaseManagedCollectionCache<K : Comparable<K>, Type : FirebaseResource>(
-    private val scope: Scope,
+    private val firebaseScope: FirebaseScope,
     val query: Query,
     private val clazz: KClass<Type>,
     orderKeyFunction: (Type) -> K
@@ -30,24 +30,24 @@ abstract class FirebaseManagedCollectionCache<K : Comparable<K>, Type : Firebase
     }
 
     override fun insert(previousId: String?, item: Type) {
-        item.init(scope, query)
+        item.init(firebaseScope, query)
         super.insert(previousId, item)
     }
 
     override fun insertAll(items: Collection<Type>) {
         items.forEach {
-            it.init(scope, query)
+            it.init(firebaseScope, query)
         }
         super.insertAll(items)
     }
 
     override fun update(previousId: String?, item: Type) {
-        item.init(scope, query)
+        item.init(firebaseScope, query)
         super.update(previousId, item)
     }
 
     override fun delete(item: Type) {
-        item.init(scope, query)
+        item.init(firebaseScope, query)
         super.delete(item)
     }
 

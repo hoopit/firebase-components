@@ -6,20 +6,20 @@ import com.google.firebase.database.Query
 import com.google.firebase.database.core.view.QuerySpec
 import io.hoopit.android.common.liveData
 import io.hoopit.android.firebaserealtime.cache.FirebaseListCache
-import io.hoopit.android.firebaserealtime.core.FirebaseCache
 import io.hoopit.android.firebaserealtime.core.FirebaseResource
-import io.hoopit.android.firebaserealtime.core.Scope
+import io.hoopit.android.firebaserealtime.core.FirebaseScope
 import java.util.TreeMap
 import kotlin.reflect.KClass
 
 abstract class FirebaseDaoBase<K : Comparable<K>, V : FirebaseResource>(
     private val classModel: KClass<V>,
     private val disconnectDelay: Long,
-    private val cacheManager: FirebaseCache = Scope.defaultInstance.cache
+    private val firebaseScope: FirebaseScope = FirebaseScope.defaultInstance
 ) {
 
     private val pagedCacheMap = mutableMapOf<QuerySpec, FirebasePagedListCache<K, V>>()
     private val listCacheMap = mutableMapOf<QuerySpec, FirebaseListCache<K, V>>()
+    private val cacheManager = firebaseScope.firebaseCache
 
     protected inline fun <T, K, P : Comparable<P>> LiveData<List<T>>.orderByChild(
         crossinline f: (T) -> LiveData<K?>,
@@ -29,7 +29,9 @@ abstract class FirebaseDaoBase<K : Comparable<K>, V : FirebaseResource>(
         med.addSource(this) { list ->
             val map = TreeMap<P, T>()
             list.forEach { item ->
-                med.addSource(f(item)) { subItem ->
+                val asd = f(item)
+                med.removeSource(asd)
+                med.addSource(asd) { subItem ->
                     subItem?.let {
                         map.values.remove(item)
                         map[t(it)] = item

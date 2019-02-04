@@ -74,6 +74,10 @@ private constructor(
         // Do nothing, because the move is handled by the subsequent change event
         return false
     }
+
+    fun position(item: V): Int {
+        return map.keys.indexOf(orderKeyFunction(item))
+    }
 }
 //
 //class FirebaseCollection<K : Comparable<K>, V : IFirebaseEntity>

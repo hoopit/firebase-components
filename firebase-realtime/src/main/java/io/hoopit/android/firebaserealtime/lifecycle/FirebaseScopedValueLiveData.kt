@@ -5,12 +5,12 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
 import io.hoopit.android.firebaserealtime.cache.IManagedCache
-import io.hoopit.android.firebaserealtime.core.Scope
+import io.hoopit.android.firebaserealtime.core.FirebaseScope
 import kotlin.reflect.KClass
 
 class FirebaseScopedValueLiveData<T : Any>(
     query: Query,
-    resource: Scope.Resource,
+    resource: FirebaseScope.Resource,
     private val clazz: KClass<T>,
     cache: IManagedCache? = null,
     disconnectDelay: Long

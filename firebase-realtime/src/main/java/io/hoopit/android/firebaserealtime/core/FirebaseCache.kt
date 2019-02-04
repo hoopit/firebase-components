@@ -8,7 +8,7 @@ import io.hoopit.android.firebaserealtime.paging.FirebasePagedListCache
 import kotlin.reflect.KClass
 
 class FirebaseCache(
-    private val scope: Scope
+    private val firebaseScope: FirebaseScope
 ) {
 
     private val itemCaches = mutableMapOf<KClass<*>, FirebaseValueCache<*>>()
@@ -23,7 +23,7 @@ class FirebaseCache(
     fun <T : Any> getItemCache(clazz: KClass<T>): FirebaseValueCache<T> {
         @Suppress("UNCHECKED_CAST")
         return itemCaches.getOrPut(clazz) {
-            FirebaseValueCache(scope, clazz)
+            FirebaseValueCache(firebaseScope, clazz)
         } as FirebaseValueCache<T>
     }
 
@@ -35,7 +35,7 @@ class FirebaseCache(
         // TODO: consider attaching initial listener immediately
         @Suppress("UNCHECKED_CAST")
         return pagedListCache.getOrPut(query.spec) {
-            FirebasePagedListCache(scope, query, classModel, orderByKey)
+            FirebasePagedListCache(firebaseScope, query, classModel, orderByKey)
         } as FirebasePagedListCache<K, T>
     }
 
@@ -47,7 +47,7 @@ class FirebaseCache(
         @Suppress("UNCHECKED_CAST")
         return listCache.getOrElse(query.spec) {
             FirebaseListCache(
-                scope,
+                firebaseScope,
                 query,
                 clazz,
                 orderByKey
@@ -65,7 +65,7 @@ class FirebaseCache(
         query: Query
     ) {
         listCache.getOrPut(query.spec) { cache }
-        val scope = scope.getResource(cache.query)
+        val scope = firebaseScope.getResource(cache.query)
         return scope.addListener(cache.getChildListener())
     }
 }

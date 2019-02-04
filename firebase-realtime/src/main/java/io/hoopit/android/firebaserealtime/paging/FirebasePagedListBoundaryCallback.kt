@@ -2,7 +2,7 @@ package io.hoopit.android.firebaserealtime.paging
 
 import androidx.paging.PagedList
 import com.google.firebase.database.Query
-import io.hoopit.android.firebaserealtime.core.Scope
+import io.hoopit.android.firebaserealtime.core.FirebaseScope
 import timber.log.Timber
 
 /***
@@ -145,7 +145,7 @@ class FirebaseSimplePagedListBoundaryCallback<LocalType, Key>(
     query: Query,
     sortKey: (LocalType) -> Key,
     private val cache: FirebasePagedListCache<*, *>,
-    private val resource: Scope.Resource,
+    private val resource: FirebaseScope.Resource,
     private val pagedListConfig: PagedList.Config? = null
 ) : FirebasePagedListBoundaryCallback<LocalType, Key>(cache.query, sortKey) {
 

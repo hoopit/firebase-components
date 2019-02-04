@@ -39,7 +39,7 @@ class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, Remot
      */
     fun build(): LiveData<PagedList<LocalType>> {
         val liveData = FirebaseCacheLiveData<PagedList<LocalType>>(
-            factory.cache.scope.getResource(factory.query),
+            factory.cache.firebaseScope.getResource(factory.query),
             factory.query,
             factory.cache,
             disconnectDelay
@@ -56,7 +56,7 @@ class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, Remot
             factory.query,
             factory.keyFunction,
             factory.cache,
-            factory.cache.scope.getResource(factory.query),
+            factory.cache.firebaseScope.getResource(factory.query),
             pagedListConfig.build()
         )
     }

@@ -8,15 +8,15 @@ import com.google.firebase.database.ValueEventListener
 import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 
-class Scope(
+class FirebaseScope(
     private val referenceManager: FirebaseReferenceManager
 ) {
 
-    lateinit var cache: FirebaseCache
+    lateinit var firebaseCache: FirebaseCache
 
     companion object {
-        val defaultInstance = Scope(FirebaseReferenceManager()).also {
-            it.cache = FirebaseCache(it)
+        val defaultInstance = FirebaseScope(FirebaseReferenceManager()).also {
+            it.firebaseCache = FirebaseCache(it)
         }
     }
 
@@ -39,7 +39,7 @@ class Scope(
     }
 
     private fun onDeactivate(query: Query) {
-        cache.dispose(query.spec)
+        firebaseCache.dispose(query.spec)
     }
 
     inner class Resource constructor(

@@ -8,13 +8,13 @@ import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.core.view.QuerySpec
 import io.hoopit.android.firebaserealtime.core.FirebaseResource
-import io.hoopit.android.firebaserealtime.core.Scope
+import io.hoopit.android.firebaserealtime.core.FirebaseScope
 import io.hoopit.android.firebaserealtime.lifecycle.FirebaseCacheLiveData
 import timber.log.Timber
 import kotlin.reflect.KClass
 
 class FirebaseValueCache<Type : Any>(
-    private val scope: Scope,
+    private val firebaseScope: FirebaseScope,
     private val clazz: KClass<Type>
 ) : IManagedCache {
 
@@ -32,7 +32,7 @@ class FirebaseValueCache<Type : Any>(
     fun getLiveData(
         query: Query,
         disconnectDelay: Long,
-        resource: Scope.Resource = scope.getResource(query)
+        resource: FirebaseScope.Resource = firebaseScope.getResource(query)
     ): LiveData<Type?> {
         return liveData.getOrPut(query.spec) {
             FirebaseCacheLiveData<Type?>(
@@ -64,7 +64,7 @@ class FirebaseValueCache<Type : Any>(
             val item = snapshot.getValue(clazz.java)
             if (item is FirebaseResource) {
                 item.entityId = requireNotNull(snapshot.key)
-                item.init(scope, query)
+                item.init(firebaseScope, query)
             }
             liveData.postValue(item)
         }
