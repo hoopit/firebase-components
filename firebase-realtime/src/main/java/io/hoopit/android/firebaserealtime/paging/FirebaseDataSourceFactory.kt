@@ -5,7 +5,7 @@ import com.google.firebase.database.Query
 import io.hoopit.android.firebaserealtime.core.FirebaseResource
 
 abstract class IFirebaseDataSourceFactory<Key : Comparable<Key>, StoreType : FirebaseResource, MappingType : Any> :
-    DataSource.Factory<Pair<String, Key>, MappingType>() {
+    DataSource.Factory<ItemKeyedFirebaseDataSource.DataSourceKey<Key>, MappingType>() {
     abstract val cache: FirebasePagedListCache<Key, StoreType>
     abstract val query: Query
     abstract val keyFunction: (MappingType) -> Key
@@ -25,16 +25,13 @@ class FirebaseDataSourceFactory<Key : Comparable<Key>, Type : FirebaseResource>(
         override val cache = dataSourceFactory.cache
         override val query = dataSourceFactory.query
 
-        override fun create(): DataSource<Pair<String, Key>, MappingType> {
+        override fun create(): DataSource<ItemKeyedFirebaseDataSource.DataSourceKey<Key>, MappingType> {
             return dataSourceFactory.create().map(mapper)
         }
     }
 
-    override fun create(): DataSource<Pair<String, Key>, Type> {
-        return FirebaseDataSource(keyFunction, cache)
-//            .also {
-//                cache.addInvalidationListener { it.invalidate() }
-//            }
+    override fun create(): DataSource<ItemKeyedFirebaseDataSource.DataSourceKey<Key>, Type> {
+        return ItemKeyedFirebaseDataSource(keyFunction, cache)
     }
 
     @Suppress("unused")
@@ -45,3 +42,4 @@ class FirebaseDataSourceFactory<Key : Comparable<Key>, Type : FirebaseResource>(
         return FirebaseDataSourceFactoryMapper(this, mapper, sortKeyFunc)
     }
 }
+

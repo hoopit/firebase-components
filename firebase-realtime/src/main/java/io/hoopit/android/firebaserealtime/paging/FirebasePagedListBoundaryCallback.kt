@@ -14,33 +14,35 @@ abstract class FirebasePagedListBoundaryCallback<LocalType, Key>(
 ) : PagedList.BoundaryCallback<LocalType>() {
 
     override fun onZeroItemsLoaded() {
-        Timber.d("called: onZeroItemsLoaded: ${query.spec}")
+//        Timber.d("called: onZeroItemsLoaded: ${query.spec}")
         addInitialListener(query)
     }
 
     override fun onItemAtEndLoaded(itemAtEnd: LocalType) {
-        Timber.d("called: onItemAtEndLoaded: ${query.spec}")
         // FIXME: Enable paging
         return
+        Timber.d("called: onItemAtEndLoaded: ${query.spec}")
         if (query.spec.loadsAllData()) {
             Timber.d("onItemAtEndLoaded: Ignored: Query loads all data.")
             return
         }
+        // FIXME: Should we require isViewFromLeft?
         val q = if (query.spec.params.isViewFromLeft) startAt(query, itemAtEnd)
         else endAt(query, itemAtEnd)
         addEndListener(query, q)
     }
 
     override fun onItemAtFrontLoaded(itemAtFront: LocalType) {
-        Timber.d("called: onItemAtFrontLoaded: ${query.spec}")
         // FIXME: enable paging
         return
+        // FIXME: Or is this never used ?
+        Timber.d("called: onItemAtFrontLoaded: ${query.spec}")
         if (query.spec.loadsAllData()) {
-//            Timber.d("onItemAtFrontLoaded: Ignored: Query loads all data.")
+            Timber.d("onItemAtFrontLoaded: Ignored: Query loads all data.")
             return
         }
         if (!query.spec.params.hasStart()) {
-//            Timber.d("onItemAtFrontLoaded: Ignored: No start specified.")
+            Timber.d("onItemAtFrontLoaded: Ignored: No start specified.")
             return
         }
 

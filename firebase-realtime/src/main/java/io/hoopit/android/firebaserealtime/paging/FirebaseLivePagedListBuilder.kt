@@ -9,7 +9,7 @@ import io.hoopit.android.firebaserealtime.lifecycle.FirebaseCacheLiveData
 
 class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, RemoteType : FirebaseResource>(
     private val factory: IFirebaseDataSourceFactory<Key, RemoteType, LocalType>,
-    private val pagedListConfig: PagedList.Config.Builder,
+    pagedListConfig: PagedList.Config,
     var disconnectDelay: Long
 ) {
 
@@ -32,7 +32,7 @@ class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, Remot
         val nextPagesMode: FirebaseReferenceMode = FirebaseReferenceMode.SINGLE
     )
 
-    private val livePagedListBuilder = LivePagedListBuilder(factory, pagedListConfig.build())
+    private val livePagedListBuilder = LivePagedListBuilder(factory, pagedListConfig)
 
     /**
      * Builds the PagedList LiveData. Boundary callback is overwritten.
@@ -44,20 +44,13 @@ class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, Remot
             factory.cache,
             disconnectDelay
         )
-        val callback = buildBoundaryCallback()
-        liveData.addSource(livePagedListBuilder.setBoundaryCallback(callback).build()) {
+        liveData.addSource(livePagedListBuilder.build()) {
             liveData.value = it
         }
         return liveData
     }
 
-    private fun buildBoundaryCallback(): FirebasePagedListBoundaryCallback<LocalType, Key> {
-        return FirebaseSimplePagedListBoundaryCallback(
-            factory.query,
-            factory.keyFunction,
-            factory.cache,
-            factory.cache.firebaseScope.getResource(factory.query),
-            pagedListConfig.build()
-        )
+    fun setBoundaryCallback(boundaryCallback: FirebasePagedListBoundaryCallback<LocalType, Key>): LivePagedListBuilder<ItemKeyedFirebaseDataSource.DataSourceKey<Key>, LocalType> {
+        return livePagedListBuilder.setBoundaryCallback(boundaryCallback)
     }
 }

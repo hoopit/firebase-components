@@ -18,33 +18,52 @@ private constructor(
         else o2.compareTo(o1)
     }, ascending, orderKeyFunction)
 
-    fun getAround(key: K?, limit: Int): List<V> {
-        Timber.d("called: getAround")
-        val list = key?.let { map.tailMap(it, true).values } ?: map.values
-        return list.take(limit).toList()
+    data class InitialData<V>(val items: List<V>, val position: Int, val totalCount: Int)
+
+    @Synchronized
+    fun load(key: K?, limit: Int, clampLimit: Int): InitialData<V> {
+        val adjustedKey = if (key != null && map.keys.indexOf(key) <= clampLimit) {
+            Timber.d("load: Adjusted initial position to 0")
+            null
+        } else {
+            key
+        }
+        val values = adjustedKey?.let { map.tailMap(it, true).values } ?: map.values
+        val data = values.take(limit).toList()
+        val position = adjustedKey?.let {
+            map.keys.indexOf(it)
+        } ?: 0
+        return InitialData(items = data, position = position, totalCount = map.size)
     }
 
+    @Synchronized
     fun getAfter(key: K, limit: Int): List<V> {
-        Timber.d("called: getAfter")
         val list = key.let { map.tailMap(it, false).values }
         return list.take(limit).toList()
     }
 
+    @Synchronized
     fun getBefore(key: K, limit: Int): List<V> {
-        Timber.d("called: getBefore")
         val list = key.let { map.headMap(it, false).values }
         return list.toList().takeLast(limit)
     }
 
+    fun load(start: Int, limit: Int, clampLimit: Int): InitialData<V> {
+        return InitialData(map.values.toList().subList(start, start + limit), start, map.size)
+    }
+
+    fun getRange(startPosition: Int, loadSize: Int): List<V> {
+
+        TODO("not implemented")
+    }
+
     @Synchronized
     fun addAfter(id: String?, item: V) {
-        Timber.d("called: addAfter")
         map[orderKeyFunction(item)] = item
     }
 
     @Synchronized
     fun update(previousItemId: String?, item: V) {
-        Timber.d("called: update")
 //        val oldValue = map.replace(orderKeyFunction(item), item)
 //        if (oldValue != null) return
         if (previousItemId == null) {
@@ -64,7 +83,6 @@ private constructor(
 
     @Synchronized
     fun remove(item: V): Boolean {
-        Timber.d("called: remove")
         return map.remove(orderKeyFunction(item)) != null
     }
 
@@ -73,23 +91,19 @@ private constructor(
     }
 
     fun clear() {
-        Timber.d("called: clear")
         map.clear()
     }
 
     fun addAll(items: Collection<V>) {
-        Timber.d("called: addAll")
         items.forEach { map[orderKeyFunction(it)] = it }
     }
 
     fun move(previousChildName: String?, child: V): Boolean {
-        Timber.d("called: move")
         // Do nothing, because the move is handled by the subsequent change event
         return false
     }
 
     fun position(item: V): Int {
-        Timber.d("called: position")
         return map.keys.indexOf(orderKeyFunction(item))
     }
 }

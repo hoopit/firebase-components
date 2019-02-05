@@ -20,7 +20,7 @@ abstract class FirebaseCollectionCacheBase<K : Comparable<K>, Type : IFirebaseEn
     private val invalidationHandler = Handler(Looper.getMainLooper())
 
     private val invalidationTask = Runnable {
-        Timber.d("dispatchInvalidate: executing delayed invalidate")
+        Timber.d("dispatchInvalidate: executing delayed invalidate for ${query.spec}")
         invalidate()
     }
 
@@ -31,10 +31,6 @@ abstract class FirebaseCollectionCacheBase<K : Comparable<K>, Type : IFirebaseEn
 
     val size: Int
         get() = collection.size
-
-    fun indexOf(item: Type): Int {
-        return collection.indexOf(item)
-    }
 
     protected val items = mutableMapOf<String, MutableLiveData<Type>>()
 
@@ -66,7 +62,7 @@ abstract class FirebaseCollectionCacheBase<K : Comparable<K>, Type : IFirebaseEn
      */
     protected open fun shouldIgnoreRemove(item: Type): Boolean {
         if (!query.spec.params.hasAnchoredLimit()) return false
-        val pos = collection.position(item)
+        val pos = collection.position(item) + 1
         return (pos % query.spec.params.limit == 0 || (pos == collection.size && pos > query.spec.params.limit))
     }
 
