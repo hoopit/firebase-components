@@ -6,7 +6,6 @@ import androidx.annotation.LayoutRes
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.LifecycleOwner
-import androidx.paging.PagedList
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import io.hoopit.android.ui.NetworkState
@@ -73,7 +72,7 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
     }
 
     override fun getItem(position: Int): T? {
-        return if (position < super.getItemCount()) super.getItem(position)
+        return if (position < super.getItemCount() && position >= 0) super.getItem(position)
         else null
     }
 
