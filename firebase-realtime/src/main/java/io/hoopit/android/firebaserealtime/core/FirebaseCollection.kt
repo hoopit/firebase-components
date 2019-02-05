@@ -73,7 +73,8 @@ private constructor(
             val currentKey = map.entries.first { (_, value) -> value.entityId == previousItemId }.key
             val nextKey = map.lowerKey(currentKey)
             if (nextKey == null) {
-                throw IllegalStateException("nextKey cannot be null")
+                Timber.e(IllegalStateException("nextKey cannot be null"))
+                map[orderKeyFunction(item)] = item
             } else {
                 map.remove(nextKey)
                 map[orderKeyFunction(item)] = item
