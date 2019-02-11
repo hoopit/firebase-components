@@ -50,7 +50,7 @@ class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, Remot
         return liveData
     }
 
-    fun setBoundaryCallback(boundaryCallback: FirebasePagedListBoundaryCallback<LocalType, Key>): LivePagedListBuilder<ItemKeyedFirebaseDataSource.DataSourceKey<Key>, LocalType> {
+    fun setBoundaryCallback(boundaryCallback: PagedList.BoundaryCallback<LocalType>): LivePagedListBuilder<ItemKeyedFirebaseDataSource.DataSourceKey<Key>, LocalType> {
         return livePagedListBuilder.setBoundaryCallback(boundaryCallback)
     }
 }

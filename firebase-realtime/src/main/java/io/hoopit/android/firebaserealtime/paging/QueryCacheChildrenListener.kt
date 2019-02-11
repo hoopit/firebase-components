@@ -20,6 +20,7 @@ class QueryCacheChildrenListener<RemoteType : IFirebaseEntity>(
 ) : FirebaseChildEventListener<RemoteType>(clazz), IQueryCacheListener {
 
     private val count = AtomicInteger()
+    var active = true
 
     override fun cancelled(error: DatabaseError) {
         Timber.e(error.toException())
@@ -27,17 +28,20 @@ class QueryCacheChildrenListener<RemoteType : IFirebaseEntity>(
 
     override fun childMoved(previousChildName: String?, child: RemoteType) {
         Timber.d("called: childMoved($previousChildName, ${child.entityId})")
+        if (!active) return
         cache.move(previousChildName, child)
     }
 
     override fun childChanged(previousChildName: String?, child: RemoteType) {
         Timber.d("called: childChanged($previousChildName, ${child.entityId})")
+        if (!active) return
         cache.update(previousChildName, child)
     }
 
     @Synchronized
     override fun childAdded(previousChildName: String?, child: RemoteType) {
         Timber.d("called: childAdded($previousChildName, ${child.entityId})")
+        if (!active) return
         cache.insert(previousChildName, child)
         count.incrementAndGet()
     }
@@ -45,6 +49,7 @@ class QueryCacheChildrenListener<RemoteType : IFirebaseEntity>(
     @Synchronized
     override fun childRemoved(child: RemoteType) {
         Timber.d("called: childRemoved(${child.entityId})")
+        if (!active) return
         cache.delete(child)
         count.decrementAndGet()
     }

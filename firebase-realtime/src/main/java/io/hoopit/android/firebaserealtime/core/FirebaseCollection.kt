@@ -6,17 +6,16 @@ import java.util.concurrent.ConcurrentSkipListMap
 class FirebaseCollection<K : Comparable<K>, V : IFirebaseEntity>
 private constructor(
     private val map: ConcurrentSkipListMap<K, V>,
-    private val ascending: Boolean,
     private val orderKeyFunction: (V) -> K
 ) : Collection<V> by map.values {
 
     constructor(
         orderKeyFunction: (V) -> K,
-        ascending: Boolean
+        descending: Boolean
     ) : this(ConcurrentSkipListMap { o1, o2 ->
-        if (ascending) o1.compareTo(o2)
+        if (!descending) o1.compareTo(o2)
         else o2.compareTo(o1)
-    }, ascending, orderKeyFunction)
+    }, orderKeyFunction)
 
     data class InitialData<V>(val items: List<V>, val position: Int, val totalCount: Int)
 

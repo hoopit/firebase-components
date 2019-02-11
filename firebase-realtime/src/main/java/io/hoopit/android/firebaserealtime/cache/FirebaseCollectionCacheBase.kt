@@ -15,6 +15,7 @@ import timber.log.Timber
  */
 abstract class FirebaseCollectionCacheBase<K : Comparable<K>, Type : IFirebaseEntity>(
     private val query: Query,
+    descending: Boolean,
     orderKeyFunction: (Type) -> K
 ) {
     private val invalidationHandler = Handler(Looper.getMainLooper())
@@ -26,7 +27,7 @@ abstract class FirebaseCollectionCacheBase<K : Comparable<K>, Type : IFirebaseEn
 
     protected val collection = FirebaseCollection(
         orderKeyFunction,
-        query.spec.params.isViewFromLeft
+        descending
     )
 
     val size: Int
@@ -54,6 +55,11 @@ abstract class FirebaseCollectionCacheBase<K : Comparable<K>, Type : IFirebaseEn
         collection.update(previousId, item)
         items[item.entityId]?.postValue(item)
         dispatchInvalidate()
+    }
+
+    fun clear(invalidate: Boolean = false) {
+        collection.clear()
+        if (invalidate) invalidate()
     }
 
     /**

@@ -11,9 +11,10 @@ import kotlin.reflect.KClass
 abstract class FirebaseManagedCollectionCache<K : Comparable<K>, Type : FirebaseResource>(
     private val firebaseScope: FirebaseScope,
     val query: Query,
+    descending: Boolean,
     private val clazz: KClass<Type>,
     orderKeyFunction: (Type) -> K
-) : FirebaseCollectionCacheBase<K, Type>(query, orderKeyFunction), IManagedCache {
+) : FirebaseCollectionCacheBase<K, Type>(query, descending, orderKeyFunction), IManagedCache {
 
     override fun onInactive(firebaseCacheLiveData: LiveData<*>, query: Query) {
 //        scope.dispatchDeactivate()

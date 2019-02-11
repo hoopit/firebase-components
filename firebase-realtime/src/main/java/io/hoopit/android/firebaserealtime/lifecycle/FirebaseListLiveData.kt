@@ -24,7 +24,7 @@ class FirebaseListLiveData<K : Comparable<K>, T : IFirebaseEntity>(
         query, classModel,
         FirebaseCollection<K, T>(
             orderKeyFunction,
-            query.spec.params.isViewFromLeft
+            !query.spec.params.isViewFromLeft
         ), disconnectDelay
     )
 

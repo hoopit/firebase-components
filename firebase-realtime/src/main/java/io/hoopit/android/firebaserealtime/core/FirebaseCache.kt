@@ -29,13 +29,14 @@ class FirebaseCache(
 
     fun <K : Comparable<K>, T : FirebaseResource> getOrCreatePagedCache(
         query: Query,
+        descending: Boolean,
         classModel: KClass<T>,
         orderByKey: (T) -> K
     ): FirebasePagedListCache<K, T> {
         // TODO: consider attaching initial listener immediately
         @Suppress("UNCHECKED_CAST")
         return pagedListCache.getOrPut(query.spec) {
-            FirebasePagedListCache(firebaseScope, query, classModel, orderByKey)
+            FirebasePagedListCache(firebaseScope, query, descending, classModel, orderByKey)
         } as FirebasePagedListCache<K, T>
     }
 

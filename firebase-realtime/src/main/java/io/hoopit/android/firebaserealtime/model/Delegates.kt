@@ -31,11 +31,13 @@ inline fun <K : Comparable<K>, reified T : FirebaseResource> FirebaseResource.fi
 
 inline fun <K : Comparable<K>, reified T : FirebaseResource> FirebaseResource.firebaseCachedPagedList(
     disconnectDelay: Long,
+    descending: Boolean = false,
     noinline orderKeyFunction: (T) -> K,
     crossinline query: () -> Query
 ): Lazy<FirebaseDataSourceFactory<K, T>> {
     return lazy {
-        firebaseScope.firebaseCache.getOrCreatePagedCache(query(), T::class, orderKeyFunction).getDataSourceFactory()
+        firebaseScope.firebaseCache.getOrCreatePagedCache(query(), descending, T::class, orderKeyFunction)
+            .getDataSourceFactory()
     }
 }
 

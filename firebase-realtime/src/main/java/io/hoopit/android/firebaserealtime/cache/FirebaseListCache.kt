@@ -13,7 +13,13 @@ class FirebaseListCache<K : Comparable<K>, T : FirebaseResource>(
     query: Query,
     clazz: KClass<T>,
     orderKeyFunction: (T) -> K
-) : FirebaseManagedCollectionCache<K, T>(firebaseScope, query, clazz, orderKeyFunction) {
+) : FirebaseManagedCollectionCache<K, T>(
+    firebaseScope,
+    query,
+    !query.spec.params.isViewFromLeft,
+    clazz,
+    orderKeyFunction
+) {
 
     private var liveData: MutableLiveData<List<T>>? = null
 

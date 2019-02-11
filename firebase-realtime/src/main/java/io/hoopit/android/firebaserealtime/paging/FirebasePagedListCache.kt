@@ -10,15 +10,14 @@ import kotlin.reflect.KClass
 class FirebasePagedListCache<K : Comparable<K>, Type : FirebaseResource>(
     val firebaseScope: FirebaseScope,
     query: Query,
+    descending: Boolean,
     clazz: KClass<Type>,
     orderKeyFunction: (Type) -> K
-) : FirebaseManagedCollectionCache<K, Type>(firebaseScope, query, clazz, orderKeyFunction) {
+) : FirebaseManagedCollectionCache<K, Type>(firebaseScope, query, descending, clazz, orderKeyFunction) {
 
     private val invalidationListeners = mutableListOf<() -> Unit>()
 
     private val dataSourceFactory = FirebaseDataSourceFactory(this, query, orderKeyFunction)
-
-    private var isInitialized = false
 
     fun getDataSourceFactory(): FirebaseDataSourceFactory<K, Type> {
         return dataSourceFactory

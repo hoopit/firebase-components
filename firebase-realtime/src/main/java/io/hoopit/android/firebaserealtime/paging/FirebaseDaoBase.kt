@@ -45,11 +45,13 @@ abstract class FirebaseDaoBase<K : Comparable<K>, V : FirebaseResource>(
 
     private fun getPagedQueryCache(
         query: Query,
+        descending: Boolean,
         sortedKeyFunction: (V) -> K
     ): FirebasePagedListCache<K, V> {
         return pagedCacheMap.getOrPut(query.spec) {
             cacheManager.getOrCreatePagedCache(
                 query,
+                descending,
                 classModel,
                 sortedKeyFunction
             )
@@ -69,15 +71,19 @@ abstract class FirebaseDaoBase<K : Comparable<K>, V : FirebaseResource>(
         }
     }
 
-    protected fun getList(query: Query, sortedKeyFunction: (V) -> K): LiveData<List<V>> {
+    protected fun getList(
+        query: Query,
+        sortedKeyFunction: (V) -> K
+    ): LiveData<List<V>> {
         return getListQueryCache(query, sortedKeyFunction).getLiveData(disconnectDelay)
     }
 
     protected fun getPagedList(
         query: Query,
+        descending: Boolean = false,
         sortedKeyFunction: (V) -> K
     ): FirebaseDataSourceFactory<K, V> {
-        return getPagedQueryCache(query, sortedKeyFunction).getDataSourceFactory()
+        return getPagedQueryCache(query, descending, sortedKeyFunction).getDataSourceFactory()
     }
 
     protected fun getItem(itemId: String, query: Query?): LiveData<V?> {

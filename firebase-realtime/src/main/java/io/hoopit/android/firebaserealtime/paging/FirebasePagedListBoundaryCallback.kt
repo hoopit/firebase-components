@@ -205,3 +205,64 @@ class FirebaseSimplePagedListBoundaryCallback<LocalType, Key>(
         }
     }
 }
+
+/**
+ * A [PagedList.BoundaryCallback] that increases the limit of its source [Query] to observe additional items
+ * as they are requested.
+ */
+class FirebaseLivePagedListBoundaryCallback<LocalType>(
+    private val query: Query,
+    private val cache: FirebasePagedListCache<*, *>,
+    private val resource: FirebaseScope.Resource,
+    private val pagedListConfig: PagedList.Config,
+    private val descending: Boolean = false
+) : PagedList.BoundaryCallback<LocalType>() {
+
+    private var activeQuery: Query? = null
+    private var requestedLimit = 0
+
+    private fun canAddListener(): Boolean {
+        return cache.size >= requestedLimit
+    }
+
+    @Synchronized
+    override fun onZeroItemsLoaded() {
+        if (activeQuery != null) return
+        createQuery()
+    }
+
+    private var activeListener: QueryCacheChildrenListener<*>? = null
+
+    private fun createQuery() {
+        cache.clear()
+        requestedLimit += if (activeQuery == null)
+            pagedListConfig.initialLoadSizeHint
+        else
+            pagedListConfig.pageSize
+
+        val newQuery = if (descending) {
+            query.limitToLast(requestedLimit)
+        } else {
+            query.limitToFirst(requestedLimit)
+        }
+        activeQuery = newQuery
+        activeListener?.active = false
+        activeListener = cache.getChildListener().also {
+            resource.addSubQuery(newQuery, it)
+        }
+    }
+
+    @Synchronized
+    override fun onItemAtEndLoaded(itemAtEnd: LocalType) {
+        if (!canAddListener())
+            return
+        createQuery()
+    }
+
+    @Synchronized
+    override fun onItemAtFrontLoaded(itemAtFront: LocalType) {
+        return
+        if (!canAddListener()) return
+        createQuery()
+    }
+}
