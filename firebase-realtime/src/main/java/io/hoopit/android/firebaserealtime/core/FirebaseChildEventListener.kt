@@ -5,8 +5,8 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import kotlin.reflect.KClass
 
-abstract class FirebaseChildEventListener<T : IFirebaseEntity>(
-    private val classModel: KClass<out T>
+abstract class FirebaseChildEventListener<T : Any>(
+    private val classModel: KClass<T>
 ) : ChildEventListener {
 
     final override fun onCancelled(error: DatabaseError) {
@@ -15,33 +15,33 @@ abstract class FirebaseChildEventListener<T : IFirebaseEntity>(
 
     final override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
         snapshot.getValue(classModel.java)?.let {
-            it.entityId = requireNotNull(snapshot.key)
+            if (it is IFirebaseEntity) it.init(snapshot)
             childMoved(previousChildName, it)
         }
     }
 
     final override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
         snapshot.getValue(classModel.java)?.let {
-            it.entityId = requireNotNull(snapshot.key)
+            if (it is IFirebaseEntity) it.init(snapshot)
             childChanged(previousChildName, it)
         }
     }
 
     final override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
         snapshot.getValue(classModel.java)?.let {
-            it.entityId = requireNotNull(snapshot.key)
+            if (it is IFirebaseEntity) it.init(snapshot)
             childAdded(previousChildName, it)
         }
     }
 
     final override fun onChildRemoved(snapshot: DataSnapshot) {
         snapshot.getValue(classModel.java)?.let {
-            it.entityId = requireNotNull(snapshot.key)
+            if (it is IFirebaseEntity) it.init(snapshot)
             childRemoved(it)
         }
     }
 
-    abstract fun cancelled(error: DatabaseError)
+    open fun cancelled(error: DatabaseError) {}
 
     abstract fun childMoved(previousChildName: String?, child: T)
 

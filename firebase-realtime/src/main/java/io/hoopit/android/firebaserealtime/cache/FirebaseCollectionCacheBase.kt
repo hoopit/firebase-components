@@ -66,14 +66,14 @@ abstract class FirebaseCollectionCacheBase<K : Comparable<K>, Type : IFirebaseEn
      * Whether remove requests should be ignored. Can be used to handle cases where the query has a limit,
      * and items are removed due to being pushed outside the limits of the query due to new entries being added.
      */
-    protected open fun shouldIgnoreRemove(item: Type): Boolean {
-        if (!query.spec.params.hasAnchoredLimit()) return false
-        val pos = collection.position(item) + 1
-        return (pos % query.spec.params.limit == 0 || (pos == collection.size && pos > query.spec.params.limit))
-    }
+//    protected open fun shouldIgnoreRemove(item: Type): Boolean {
+//        if (!query.spec.params.hasAnchoredLimit()) return false
+//        val pos = collection.position(item) + 1
+//        return (pos % query.spec.params.limit == 0 || (pos == collection.size && pos > query.spec.params.limit))
+//    }
 
     open fun delete(item: Type) {
-        if (shouldIgnoreRemove(item)) return
+//        if (shouldIgnoreRemove(item)) return
         val removed = collection.remove(item)
         items[item.entityId]?.postValue(null)
         if (removed) dispatchInvalidate()

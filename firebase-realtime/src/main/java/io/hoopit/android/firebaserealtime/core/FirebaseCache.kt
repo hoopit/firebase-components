@@ -27,7 +27,7 @@ class FirebaseCache(
         } as FirebaseValueCache<T>
     }
 
-    fun <K : Comparable<K>, T : FirebaseResource> getOrCreatePagedCache(
+    fun <K : Comparable<K>, T : FirebaseScopedResource> getOrCreatePagedCache(
         query: Query,
         descending: Boolean,
         classModel: KClass<T>,
@@ -40,7 +40,7 @@ class FirebaseCache(
         } as FirebasePagedListCache<K, T>
     }
 
-    fun <K : Comparable<K>, T : FirebaseResource> getOrCreateListCache(
+    fun <K : Comparable<K>, T : FirebaseScopedResource> getOrCreateListCache(
         query: Query,
         clazz: KClass<T>,
         orderByKey: (T) -> K

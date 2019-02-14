@@ -2,7 +2,12 @@
 
 package io.hoopit.android.common
 
-import androidx.lifecycle.*
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import androidx.lifecycle.Transformations
 
 /**
  * Extension wrapper for [LiveData.observe]
@@ -65,14 +70,21 @@ fun <T> LiveData<T>.observeFirstForever(observer: (T?) -> Unit) {
 /**
  * Extension wrapper for [Transformations.switchMap]
  */
-fun <X, Y> LiveData<X>.switchMap(func: (X) -> LiveData<Y>?): LiveData<Y> =
-    Transformations.switchMap(this, func)
+fun <X, Y> LiveData<X>.switchMap(func: (X) -> LiveData<Y>?): LiveData<Y> = Transformations.switchMap(this, func)
 
 /**
  * Extension wrapper for [Transformations.map]
  */
-fun <X, Y> LiveData<X>.map(func: (X) -> Y): LiveData<Y> =
-    Transformations.map(this, func)
+fun <X, Y> LiveData<X>.map(func: (X) -> Y): LiveData<Y> = Transformations.map(this, func)
+
+/**
+ * Extension wrapper for [Transformations.map]
+ */
+inline fun <X, Y> LiveData<X>.mapUpdate(crossinline func: (X) -> Y): LiveData<Y> {
+    val result = MediatorLiveData<Y>()
+    result.addSource(this) { x -> result.update(func(x)) }
+    return result
+}
 
 /**
  * Extension wrapper for [LiveDataReactiveStreams.toPublisher]

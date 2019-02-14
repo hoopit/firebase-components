@@ -1,56 +1,47 @@
 package io.hoopit.android.firebaserealtime.lifecycle
 
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.Query
 import io.hoopit.android.common.livedata.DelayedDisconnectLiveData
+import io.hoopit.android.firebaserealtime.core.CustomFirebaseCollection
 import io.hoopit.android.firebaserealtime.core.FirebaseChildEventListener
-import io.hoopit.android.firebaserealtime.core.FirebaseCollection
 import io.hoopit.android.firebaserealtime.core.IFirebaseEntity
 import kotlin.reflect.KClass
 
-class FirebaseListLiveData<K : Comparable<K>, T : IFirebaseEntity>(
+class FirebaseListLiveData<T : IFirebaseEntity>(
     private val query: Query,
-    private val classModel: KClass<out T>,
-    private val collection: FirebaseCollection<K, T>,
+    private val clazz: KClass<T>,
     disconnectDelay: Long
 ) : DelayedDisconnectLiveData<List<T>>(disconnectDelay) {
 
-    constructor(
-        query: Query,
-        classModel: KClass<out T>,
-        disconnectDelay: Long,
-        orderKeyFunction: (T) -> K
-    ) : this(
-        query, classModel,
-        FirebaseCollection<K, T>(
-            orderKeyFunction,
-            !query.spec.params.isViewFromLeft
-        ), disconnectDelay
-    )
+    private val collection = CustomFirebaseCollection<T>()
 
-    private val listener = object : FirebaseChildEventListener<T>(classModel = classModel) {
+    private val descending = query.spec.params.hasAnchoredLimit() && !query.spec.params.isViewFromLeft
 
-        override fun cancelled(error: DatabaseError) {
-            TODO("not implemented")
-        }
+    private fun invalidated() {
+        val items = collection.getRange(0, collection.size)
+        postValue(items)
+    }
+
+    init {
+        collection.setInvalidationListener(this::invalidated, removeAfterInvalidate = false)
+    }
+
+    private val listener = object : FirebaseChildEventListener<T>(clazz) {
 
         override fun childMoved(previousChildName: String?, child: T) {
-            TODO("not implemented")
+            collection.move(previousChildName, child, descending)
         }
 
         override fun childChanged(previousChildName: String?, child: T) {
-            collection.update(previousChildName, child)
-            postValue(collection.toList())
+            collection.update(previousChildName, child, descending)
         }
 
         override fun childAdded(previousChildName: String?, child: T) {
-            collection.addAfter(previousChildName, child)
-            postValue(collection.toList())
+            collection.add(previousChildName, child, descending)
         }
 
         override fun childRemoved(child: T) {
             collection.remove(child)
-            postValue(collection.toList())
         }
     }
 
@@ -60,5 +51,6 @@ class FirebaseListLiveData<K : Comparable<K>, T : IFirebaseEntity>(
 
     override fun delayedOnInactive() {
         query.removeEventListener(listener)
+        collection.clear(invalidate = false)
     }
 }

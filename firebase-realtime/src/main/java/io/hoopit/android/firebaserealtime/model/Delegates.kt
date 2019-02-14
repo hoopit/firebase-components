@@ -2,34 +2,33 @@ package io.hoopit.android.firebaserealtime.model
 
 import androidx.lifecycle.LiveData
 import com.google.firebase.database.Query
-import io.hoopit.android.firebaserealtime.core.FirebaseResource
+import io.hoopit.android.firebaserealtime.core.FirebaseScopedResource
 import io.hoopit.android.firebaserealtime.core.IFirebaseEntity
+import io.hoopit.android.firebaserealtime.core.IFirebaseResource
 import io.hoopit.android.firebaserealtime.lifecycle.FirebaseListLiveData
 import io.hoopit.android.firebaserealtime.lifecycle.FirebaseValueLiveData
 import io.hoopit.android.firebaserealtime.paging.FirebaseDataSourceFactory
 import kotlin.reflect.KProperty
 
-inline fun <reified T : Any> FirebaseResource.firebaseValue(
+inline fun <reified T : Any> IFirebaseResource.firebaseValue(
     disconnectDelay: Long = this.disconnectDelay,
     crossinline ref: () -> Query
 ): Lazy<LiveData<T?>> {
     return lazy {
-        firebaseScope.firebaseCache.getItemCache(T::class).getLiveData(ref(), disconnectDelay)
+        FirebaseValueLiveData(ref(), T::class, disconnectDelay)
     }
 }
 
-inline fun <K : Comparable<K>, reified T : FirebaseResource> FirebaseResource.firebaseList(
-    noinline orderKeyFunction: (T) -> K,
+inline fun <reified T : IFirebaseEntity> IFirebaseResource.firebaseList(
     disconnectDelay: Long = this.disconnectDelay,
     crossinline query: () -> Query
 ): Lazy<LiveData<List<T>>> {
     return lazy {
-        firebaseScope.firebaseCache.getOrCreateListCache(query(), T::class, orderKeyFunction)
-            .getLiveData(disconnectDelay)
+        FirebaseListLiveData(query(), T::class, disconnectDelay)
     }
 }
 
-inline fun <K : Comparable<K>, reified T : FirebaseResource> FirebaseResource.firebaseCachedPagedList(
+inline fun <K : Comparable<K>, reified T : FirebaseScopedResource> FirebaseScopedResource.firebaseCachedPagedList(
     disconnectDelay: Long,
     descending: Boolean = false,
     noinline orderKeyFunction: (T) -> K,
@@ -38,30 +37,6 @@ inline fun <K : Comparable<K>, reified T : FirebaseResource> FirebaseResource.fi
     return lazy {
         firebaseScope.firebaseCache.getOrCreatePagedCache(query(), descending, T::class, orderKeyFunction)
             .getDataSourceFactory()
-    }
-}
-
-inline fun <reified T : Any> firebaseValue(
-    disconnectDelay: Long,
-    crossinline ref: () -> Query
-): Lazy<LiveData<T?>> {
-    return lazy {
-        FirebaseValueLiveData(ref(), T::class, disconnectDelay)
-    }
-}
-
-inline fun <K : Comparable<K>, reified T : IFirebaseEntity> firebaseList(
-    noinline orderKeyFunction: (T) -> K,
-    disconnectDelay: Long,
-    crossinline query: () -> Query
-): Lazy<FirebaseListLiveData<K, T>> {
-    return lazy {
-        FirebaseListLiveData(
-            query(),
-            T::class,
-            orderKeyFunction = orderKeyFunction,
-            disconnectDelay = disconnectDelay
-        )
     }
 }
 

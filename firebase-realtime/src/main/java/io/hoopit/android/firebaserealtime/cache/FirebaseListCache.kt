@@ -3,12 +3,12 @@ package io.hoopit.android.firebaserealtime.cache
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.firebase.database.Query
-import io.hoopit.android.firebaserealtime.core.FirebaseResource
 import io.hoopit.android.firebaserealtime.core.FirebaseScope
+import io.hoopit.android.firebaserealtime.core.FirebaseScopedResource
 import io.hoopit.android.firebaserealtime.lifecycle.FirebaseCacheLiveData
 import kotlin.reflect.KClass
 
-class FirebaseListCache<K : Comparable<K>, T : FirebaseResource>(
+class FirebaseListCache<K : Comparable<K>, T : FirebaseScopedResource>(
     private val firebaseScope: FirebaseScope,
     query: Query,
     clazz: KClass<T>,

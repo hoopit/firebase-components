@@ -9,6 +9,12 @@ import com.google.firebase.database.core.view.QuerySpec
 import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * Manages references to Firebase Realtime Database.
+ * Uses reference counting to subscribe to the resource when at least 1 listener is active,
+ * and un-subscribes when there are no active listeners.
+ *
+ */
 class FirebaseReferenceManager {
 
     companion object {
@@ -23,7 +29,6 @@ class FirebaseReferenceManager {
 
     class FirebaseReference(private val querySpec: QuerySpec) {
 
-        // TODO: refactor
         private val childEventSubs = mutableMapOf<Query, MutableList<ChildEventListener>>()
         private var numChildEventSubs = 0
 
@@ -31,6 +36,9 @@ class FirebaseReferenceManager {
         private val singleValueEventSubs = mutableMapOf<Query, MutableList<ValueEventListener>>()
         private var numValueEventSubs = 0
 
+        /**
+         * Adds the listeners, and subscribes to the query if not already subscribed.
+         */
         @Synchronized
         fun subscribe(query: Query, vararg listeners: ChildEventListener) {
             Timber.d("called: subscribe ChildEventListener: ${query.spec}")
@@ -39,6 +47,9 @@ class FirebaseReferenceManager {
             }
         }
 
+        /**
+         * Adds the listeners, and subscribes to the query if not already subscribed.
+         */
         @Synchronized
         fun subscribe(query: Query, vararg listeners: ValueEventListener) {
             Timber.d("called: subscribe ValueEventListener: ${query.spec}")
@@ -47,6 +58,9 @@ class FirebaseReferenceManager {
             }
         }
 
+        /**
+         * Adds the listener, and subscribes to the query if not already subscribed.
+         */
         @Synchronized
         fun subscribeSingle(query: Query, vararg listeners: ValueEventListener) {
             Timber.d("called: subscribeSingle: ${query.spec}")
@@ -55,6 +69,9 @@ class FirebaseReferenceManager {
             }
         }
 
+        /**
+         * Removes the listeners, and un-subscribes from the query if no listeners remain.
+         */
         @Synchronized
         fun unsubscribe(query: Query, vararg listeners: ValueEventListener) {
             numValueEventSubs = unsubscribeInternal(query, valueEventSubs, numValueEventSubs, *listeners) {
@@ -65,6 +82,9 @@ class FirebaseReferenceManager {
             }
         }
 
+        /**
+         * Removes the listeners, and un-subscribes from the query if no listeners remain.
+         */
         @Synchronized
         fun unsubscribe(query: Query, vararg listeners: ChildEventListener) {
             numChildEventSubs = unsubscribeInternal(query, childEventSubs, numChildEventSubs, *listeners) {
@@ -72,7 +92,11 @@ class FirebaseReferenceManager {
             }
         }
 
+        /**
+         * Removes the listeners, and un-subscribes from the query if no listeners remain.
+         */
         private fun unsubscribleSingleValueListener() {
+            TODO("Not implemented")
         }
 
         @Synchronized
@@ -117,6 +141,9 @@ class FirebaseReferenceManager {
             return newCount
         }
 
+        /**
+         * Root listener that delegates to all subscribes listeners
+         */
         private val childListener = object : ChildEventListener {
 
             override fun onCancelled(error: DatabaseError) {
@@ -140,6 +167,9 @@ class FirebaseReferenceManager {
             }
         }
 
+        /**
+         * Root listener that delegates to all other subscribed listeners.
+         */
         private val valueListener = object : ValueEventListener {
             override fun onCancelled(p0: DatabaseError) {
                 valueEventSubs.values.forEach { it.forEach { it.onCancelled(p0) } }

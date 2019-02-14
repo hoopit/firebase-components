@@ -6,12 +6,12 @@ import com.google.firebase.database.Query
 import com.google.firebase.database.core.view.QuerySpec
 import io.hoopit.android.common.liveData
 import io.hoopit.android.firebaserealtime.cache.FirebaseListCache
-import io.hoopit.android.firebaserealtime.core.FirebaseResource
 import io.hoopit.android.firebaserealtime.core.FirebaseScope
+import io.hoopit.android.firebaserealtime.core.FirebaseScopedResource
 import java.util.TreeMap
 import kotlin.reflect.KClass
 
-abstract class FirebaseDaoBase<K : Comparable<K>, V : FirebaseResource>(
+abstract class FirebaseDaoBase<K : Comparable<K>, V : FirebaseScopedResource>(
     private val classModel: KClass<V>,
     private val disconnectDelay: Long,
     private val firebaseScope: FirebaseScope = FirebaseScope.defaultInstance
@@ -21,7 +21,7 @@ abstract class FirebaseDaoBase<K : Comparable<K>, V : FirebaseResource>(
     private val listCacheMap = mutableMapOf<QuerySpec, FirebaseListCache<K, V>>()
     private val cacheManager = firebaseScope.firebaseCache
 
-    protected inline fun <T, K, P : Comparable<P>> LiveData<List<T>>.orderByChild(
+    inline fun <T, K, P : Comparable<P>> LiveData<List<T>>.orderByChild(
         crossinline f: (T) -> LiveData<K?>,
         crossinline t: (K) -> P
     ): MediatorLiveData<List<T>> {

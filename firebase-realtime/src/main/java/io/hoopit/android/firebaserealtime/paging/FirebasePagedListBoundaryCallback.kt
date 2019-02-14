@@ -1,9 +1,14 @@
 package io.hoopit.android.firebaserealtime.paging
 
 import androidx.paging.PagedList
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.Query
+import io.hoopit.android.firebaserealtime.core.FirebaseChildEventListener
 import io.hoopit.android.firebaserealtime.core.FirebaseScope
+import io.hoopit.android.firebaserealtime.core.IFirebaseEntity
+import io.hoopit.android.firebaserealtime.core.IFirebaseLinkedListCollection
 import timber.log.Timber
+import kotlin.reflect.KClass
 
 /***
  * [PagedList.BoundaryCallback] for Firebase list resources
@@ -143,6 +148,9 @@ abstract class FirebasePagedListBoundaryCallback<LocalType, Key>(
 //    }
 //}
 
+/**
+ * Boundary callback that uses a child listener for the initial load, and value listeners for extended queries
+ */
 class FirebaseSimplePagedListBoundaryCallback<LocalType, Key>(
     query: Query,
     sortKey: (LocalType) -> Key,
@@ -264,5 +272,96 @@ class FirebaseLivePagedListBoundaryCallback<LocalType>(
         return
         if (!canAddListener()) return
         createQuery()
+    }
+}
+
+class FirebaseBoundaryCallback<LocalType : IFirebaseEntity>(
+    private val query: Query,
+    private val pagedListConfig: PagedList.Config,
+    private val descending: Boolean,
+    private val cache: IFirebaseLinkedListCollection<LocalType>,
+    clazz: KClass<LocalType>
+
+) : PagedList.BoundaryCallback<LocalType>() {
+
+    private var activeQuery: Query? = null
+    private var requestedLimit = 0
+
+    private fun canAddListener(): Boolean {
+        return cache.size >= requestedLimit
+    }
+
+    @Synchronized
+    override fun onZeroItemsLoaded() {
+        if (activeQuery != null) return
+        createQuery()
+    }
+
+    private fun createQuery() {
+        activeQuery?.removeEventListener(listener)
+
+        requestedLimit += if (activeQuery == null)
+            pagedListConfig.initialLoadSizeHint
+        else
+            pagedListConfig.pageSize * 5
+
+        val newQuery = if (descending) {
+            query.limitToLast(requestedLimit)
+        } else {
+            query.limitToFirst(requestedLimit)
+        }
+//        cache.clear(invalidate = false)
+
+        activeQuery = newQuery
+        newQuery.addChildEventListener(listener)
+    }
+
+    private val listener = QueryCacheChildrenListener2(cache, descending, clazz)
+
+    @Synchronized
+    override fun onItemAtEndLoaded(itemAtEnd: LocalType) {
+        if (!canAddListener())
+            return
+        createQuery()
+    }
+
+    @Synchronized
+    override fun onItemAtFrontLoaded(itemAtFront: LocalType) {
+        return
+//        if (!canAddListener()) return
+//        createQuery()
+    }
+
+    private class QueryCacheChildrenListener2<RemoteType : IFirebaseEntity>(
+        private val cache: IFirebaseLinkedListCollection<RemoteType>,
+        private val descending: Boolean,
+        clazz: KClass<RemoteType>
+    ) : FirebaseChildEventListener<RemoteType>(clazz) {
+
+        override fun cancelled(error: DatabaseError) {
+            Timber.e(error.toException())
+        }
+
+        override fun childMoved(previousChildName: String?, child: RemoteType) {
+            Timber.d("called: childMoved($previousChildName, ${child.entityId})")
+            cache.move(previousChildName, child, descending)
+        }
+
+        override fun childChanged(previousChildName: String?, child: RemoteType) {
+            Timber.d("called: childChanged($previousChildName, ${child.entityId})")
+            cache.update(previousChildName, child, descending)
+        }
+
+        @Synchronized
+        override fun childAdded(previousChildName: String?, child: RemoteType) {
+            Timber.d("called: childAdded($previousChildName, ${child.entityId})")
+            cache.add(previousChildName, child, descending)
+        }
+
+        @Synchronized
+        override fun childRemoved(child: RemoteType) {
+            Timber.d("called: childRemoved(${child.entityId})")
+            cache.remove(child)
+        }
     }
 }

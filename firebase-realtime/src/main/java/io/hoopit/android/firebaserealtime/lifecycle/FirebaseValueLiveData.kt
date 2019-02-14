@@ -5,6 +5,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
 import io.hoopit.android.common.livedata.DelayedDisconnectLiveData
+import io.hoopit.android.firebaserealtime.core.IFirebaseEntity
 import kotlin.reflect.KClass
 
 class FirebaseValueLiveData<T : Any>(
@@ -18,12 +19,12 @@ class FirebaseValueLiveData<T : Any>(
 
     override fun delayedOnInactive() = query.removeEventListener(this)
 
-    override fun onCancelled(error: DatabaseError) {
-        TODO("not implemented")
-    }
+    override fun onCancelled(error: DatabaseError) {}
 
     override fun onDataChange(snapshot: DataSnapshot) {
-        value = snapshot.getValue(classModel.java)
+        val item = snapshot.getValue(classModel.java)
+        if (item is IFirebaseEntity) item.init(snapshot)
+        postValue(item)
     }
 }
 

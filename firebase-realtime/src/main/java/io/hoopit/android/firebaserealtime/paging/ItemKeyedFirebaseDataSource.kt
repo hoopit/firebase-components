@@ -2,10 +2,12 @@ package io.hoopit.android.firebaserealtime.paging
 
 import androidx.paging.ItemKeyedDataSource
 import androidx.paging.PositionalDataSource
-import io.hoopit.android.firebaserealtime.core.FirebaseResource
+import io.hoopit.android.firebaserealtime.core.FirebaseScopedResource
+import io.hoopit.android.firebaserealtime.core.IFirebaseEntity
+import io.hoopit.android.firebaserealtime.core.IFirebaseLinkedListCollection
 import timber.log.Timber
 
-class ItemKeyedFirebaseDataSource<Key : Comparable<Key>, StoreType : FirebaseResource>(
+class ItemKeyedFirebaseDataSource<Key : Comparable<Key>, StoreType : FirebaseScopedResource>(
     private val keyFunction: (StoreType) -> Key,
     private val cache: FirebasePagedListCache<Key, StoreType>
 ) : ItemKeyedDataSource<ItemKeyedFirebaseDataSource.DataSourceKey<Key>, StoreType>() {
@@ -51,24 +53,23 @@ class ItemKeyedFirebaseDataSource<Key : Comparable<Key>, StoreType : FirebaseRes
     data class DataSourceKey<K>(val entityId: String, val key: K)
 }
 
-class PositionalFirebaseDataSource<Key : Comparable<Key>, StoreType : FirebaseResource>(
-    private val keyFunction: (StoreType) -> Key,
-    private val cache: FirebasePagedListCache<Key, StoreType>
+class PositionalFirebaseDataSource<StoreType : IFirebaseEntity>(
+    private val collection: IFirebaseLinkedListCollection<StoreType>
 ) : PositionalDataSource<StoreType>() {
 
     override fun loadInitial(params: LoadInitialParams, callback: LoadInitialCallback<StoreType>) {
-        val data = cache.getInitial(
-            startPosition = params.requestedStartPosition,
-            limit = params.requestedLoadSize,
-            clampToZero = 10
+        val startPosition = if (params.requestedStartPosition < 10) 0 else params.requestedStartPosition
+        val data = collection.getInitial(
+            startPosition = startPosition,
+            loadSize = params.requestedLoadSize
         )
-        cache.addInvalidationListener { invalidate() }
-//        callback.onResult(data.items, data.position)
+        collection.setInvalidationListener(this::invalidate, removeAfterInvalidate = true)
+
         callback.onResult(data.items, data.position, data.totalCount)
     }
 
     override fun loadRange(params: LoadRangeParams, callback: LoadRangeCallback<StoreType>) {
-        val data = cache.getRange(params.startPosition, params.loadSize)
+        val data = collection.getRange(params.startPosition, params.loadSize)
         callback.onResult(data)
     }
 }

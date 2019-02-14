@@ -7,8 +7,8 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.core.view.QuerySpec
-import io.hoopit.android.firebaserealtime.core.FirebaseResource
 import io.hoopit.android.firebaserealtime.core.FirebaseScope
+import io.hoopit.android.firebaserealtime.core.FirebaseScopedResource
 import io.hoopit.android.firebaserealtime.lifecycle.FirebaseCacheLiveData
 import timber.log.Timber
 import kotlin.reflect.KClass
@@ -62,7 +62,7 @@ class FirebaseValueCache<Type : Any>(
 
         override fun onDataChange(snapshot: DataSnapshot) {
             val item = snapshot.getValue(clazz.java)
-            if (item is FirebaseResource) {
+            if (item is FirebaseScopedResource) {
                 item.entityId = requireNotNull(snapshot.key)
                 item.init(firebaseScope, query)
             }

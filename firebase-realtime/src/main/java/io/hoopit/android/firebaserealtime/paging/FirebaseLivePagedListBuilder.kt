@@ -4,10 +4,10 @@ import androidx.lifecycle.LiveData
 import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
 import com.google.firebase.database.ChildEventListener
-import io.hoopit.android.firebaserealtime.core.FirebaseResource
+import io.hoopit.android.firebaserealtime.core.FirebaseScopedResource
 import io.hoopit.android.firebaserealtime.lifecycle.FirebaseCacheLiveData
 
-class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, RemoteType : FirebaseResource>(
+class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, RemoteType : FirebaseScopedResource>(
     private val factory: IFirebaseDataSourceFactory<Key, RemoteType, LocalType>,
     pagedListConfig: PagedList.Config,
     var disconnectDelay: Long
@@ -50,7 +50,8 @@ class FirebaseLivePagedListBuilder<Key : Comparable<Key>, LocalType : Any, Remot
         return liveData
     }
 
-    fun setBoundaryCallback(boundaryCallback: PagedList.BoundaryCallback<LocalType>): LivePagedListBuilder<ItemKeyedFirebaseDataSource.DataSourceKey<Key>, LocalType> {
+    fun setBoundaryCallback(boundaryCallback: PagedList.BoundaryCallback<LocalType>)
+        : LivePagedListBuilder<ItemKeyedFirebaseDataSource.DataSourceKey<Key>, LocalType> {
         return livePagedListBuilder.setBoundaryCallback(boundaryCallback)
     }
 }
