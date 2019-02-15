@@ -22,8 +22,8 @@ fun <T> LiveData<T>.observeFirstNotNull(owner: LifecycleOwner, observer: (T) -> 
     var observerWrapper: Observer<T>? = null
     observerWrapper = Observer { t ->
         if (t != null) {
-            observer.invoke(t)
             removeObserver(requireNotNull(observerWrapper))
+            observer.invoke(t)
         }
     }
     observe(owner, observerWrapper)
@@ -35,8 +35,20 @@ fun <T> LiveData<T>.observeFirstNotNull(owner: LifecycleOwner, observer: (T) -> 
 fun <T> LiveData<T>.observeFirst(owner: LifecycleOwner, observer: (T?) -> Unit) {
     var observerWrapper: Observer<T>? = null
     observerWrapper = Observer { t ->
-        observer.invoke(t)
         removeObserver(requireNotNull(observerWrapper))
+        observer.invoke(t)
+    }
+    observe(owner, observerWrapper)
+}
+
+/**
+ * Observes the first non-null value and then removes the observer
+ */
+fun <T> LiveData<T>.observeUntil(owner: LifecycleOwner, until: (T) -> Boolean, observer: (T?) -> Unit) {
+    var observerWrapper: Observer<T>? = null
+    observerWrapper = Observer { t ->
+        if (until(t)) removeObserver(requireNotNull(observerWrapper))
+        observer.invoke(t)
     }
     observe(owner, observerWrapper)
 }
@@ -48,8 +60,8 @@ fun <T> LiveData<T>.observeFirstNotNullForever(observer: (T?) -> Unit) {
     var observerWrapper: Observer<T>? = null
     observerWrapper = Observer { t ->
         if (t != null) {
-            observer.invoke(t)
             removeObserver(requireNotNull(observerWrapper))
+            observer.invoke(t)
         }
     }
     observeForever(observerWrapper)
