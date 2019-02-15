@@ -29,7 +29,7 @@ open class NetworkStateToastNotifier(
                 }
                 NetworkState.Status.FAILED -> {
 
-                    val errorMsg = (errorRes ?: stringRes)?.let { context.getStringOrDefault(it, msg) }
+                    val errorMsg = (errorRes ?: stringRes)?.let { context.getStringOrDefault(it, msg) } ?: msg
                     showError(errorMsg)
                     loadingIndicator?.visibility = View.GONE
                     networkState.removeObserver(this)
