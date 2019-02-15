@@ -1,6 +1,8 @@
 package io.hoopit.android.ui
 
+import android.content.Context
 import androidx.annotation.StringRes
+import io.hoopit.android.common.extensions.getStringOrDefault
 
 @Suppress("DataClassPrivateConstructor")
 data class NetworkState private constructor(
@@ -8,6 +10,11 @@ data class NetworkState private constructor(
     val msg: String? = null,
     @StringRes val stringRes: Int? = null
 ) {
+
+    fun getErrorMessage(context: Context): String? {
+        return stringRes?.let { context.getStringOrDefault(it, msg) } ?: msg
+    }
+
     companion object {
         val success = NetworkState(Status.SUCCESS)
         val loading = NetworkState(Status.RUNNING)
