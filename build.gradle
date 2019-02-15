@@ -28,14 +28,14 @@ allprojects {
 }
 
 ext {
-    appcompat = '1.0.2'
-    lifecycle = '2.0.0'
-    androidx_core = '1.0.1'
-    material = '1.0.0'
-    recyclerview = '1.0.0'
-    constraintlayout = '2.0.0-alpha3'
-    rxbinding = '3.0.0-alpha2'
-    paging = '2.1.0-rc01'
+    appcompat_version = '1.0.2'
+    lifecycle_version = '2.0.0'
+    core_tkx_version = '1.0.1'
+    material_version = '1.0.0'
+    recyclerview_version = '1.0.0'
+    constraintlayout_version = '2.0.0-alpha3'
+    rxbinding_version = '3.0.0-alpha2'
+    paging_version = '2.1.0-rc01'
     databinding_version = '3.2.1'
 
 }
