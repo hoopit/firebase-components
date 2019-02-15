@@ -41,10 +41,10 @@ ext {
 }
 
 ext {
-    firebaseCoreVersion = "16.0.4"
-    firebaseDatabaseVersion = "16.0.5"
+    firebase_core_version = "16.0.4"
+    firebase_database_version = "16.0.5"
     mavenGradleVersion = "2.1"
-    timberVersion = "4.7.1"
+    timber_version = "4.7.1"
 }
 
 task clean(type: Delete) {

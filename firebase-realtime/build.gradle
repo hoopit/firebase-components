@@ -60,9 +60,9 @@ dependencies {
 //    androidTestImplementation 'androidx.test:runner:1.1.0'
 //    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
 
-    api "androidx.paging:paging-runtime-ktx:$pagingVersion"
-    implementation "com.google.firebase:firebase-core:$firebaseCoreVersion"
-    api "com.google.firebase:firebase-database:$firebaseDatabaseVersion"
+    api "androidx.paging:paging-runtime-ktx:$paging_version"
+    implementation "com.google.firebase:firebase-core:$firebase_core_version"
+    api "com.google.firebase:firebase-database:$firebase_database_version"
 
-    implementation "com.jakewharton.timber:timber:$timberVersion"
+    implementation "com.jakewharton.timber:timber:$timber_version"
 }
