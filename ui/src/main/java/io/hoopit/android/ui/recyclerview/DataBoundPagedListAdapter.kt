@@ -11,10 +11,9 @@ import androidx.recyclerview.widget.DiffUtil
 import io.hoopit.android.ui.NetworkState
 import io.hoopit.android.ui.R
 import io.hoopit.android.ui.databinding.NetworkStateItemBinding
-import io.hoopit.android.ui.extensions.throttleClicks
 import io.reactivex.Observable
-import io.reactivex.ObservableEmitter
 import io.reactivex.subjects.PublishSubject
+import java.util.concurrent.TimeUnit
 
 /**
  * A generic RecyclerView adapter that uses Data Binding & DiffUtil.
@@ -24,15 +23,12 @@ import io.reactivex.subjects.PublishSubject
 </V></T> */
 abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
     differ: DiffUtil.ItemCallback<T>,
-    private val disableClicks: Boolean = false,
+    private val enableClicks: Boolean = true,
     private val enableLongClicks: Boolean = false,
     var lifecycleOwner: LifecycleOwner? = null,
     private val endLoadingIndicator: Boolean = true,
     private val frontLoadingIndicator: Boolean = false
-) : PagedListAdapter<T, DataBoundViewHolder<*>>(differ) {
-
-    private var listItemClickEmitter: ObservableEmitter<Observable<T?>>? = null
-    private var retryButtonClickEmitter: ObservableEmitter<Observable<NetworkState>>? = null
+) : PagedListAdapter<T, DataBoundViewHolder<*>>(differ), IClickAdapter<T> {
 
     @LayoutRes
     private val networkStateRes = R.layout.network_state_item
@@ -40,6 +36,8 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
     private var endLoadingState: NetworkState? = null
 
     private var frontLoadingState: NetworkState? = null
+
+    private val clickThrottle: Long = 500L
 
     companion object {
         const val DEFAULT_LAYOUT = 84740
@@ -51,33 +49,19 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
      * An observable stream of click events.
      * Subscribe to this to receive click events.
      */
-    val clicks: Observable<T>
-    val retryClicks: Observable<NetworkState>
-    val longClicks = PublishSubject.create<T>()
+    private val clickSource = PublishSubject.create<T>()
+    final override val clicks: Observable<T> = clickSource.throttleFirst(clickThrottle, TimeUnit.MILLISECONDS)
 
-    init {
-        clicks = Observable.create<Observable<T?>> {
-            listItemClickEmitter = it
-            it.onNext(Observable.merge(listClickObservables))
-        }.flatMap {
-            it
-        }
+    private val longClickSource = PublishSubject.create<T>()
+    override val longClicks: Observable<T> = longClickSource.throttleFirst(clickThrottle, TimeUnit.MILLISECONDS)
 
-        retryClicks = Observable.create<Observable<NetworkState>> {
-            retryButtonClickEmitter = it
-            it.onNext(Observable.merge(retryClickObservables))
-        }.switchMap {
-            it
-        }
-    }
+    private val retryClickSource = PublishSubject.create<NetworkState>()
+    val retryClicks: Observable<NetworkState> = retryClickSource.throttleFirst(clickThrottle, TimeUnit.MILLISECONDS)
 
     override fun getItem(position: Int): T? {
         return if (position < super.getItemCount() && position >= 0) super.getItem(position)
         else null
     }
-
-    private val listClickObservables = mutableListOf<Observable<T?>>()
-    private val retryClickObservables = mutableListOf<Observable<NetworkState>>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DataBoundViewHolder<*> {
         return when (viewType) {
@@ -164,15 +148,14 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
             parent,
             false
         )
-        if (!disableClicks) {
-            val observable = binding.root.throttleClicks().map { map(binding) }
-            listItemClickEmitter.let {
-                it?.onNext(observable) ?: listClickObservables.add(observable)
+        if (enableClicks) {
+            binding.root.setOnClickListener {
+                map(binding)?.let(clickSource::onNext)
             }
         }
         if (enableLongClicks) {
             binding.root.setOnLongClickListener {
-                map(binding)?.let(longClicks::onNext)
+                map(binding)?.let(longClickSource::onNext)
                 true
             }
         }
@@ -185,11 +168,8 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
             parent,
             false
         )
-        val observable: Observable<NetworkState> = binding.retryButton
-            .throttleClicks()
-            .map { binding.item }
-        retryButtonClickEmitter.let {
-            it?.onNext(observable) ?: retryClickObservables.add(observable)
+        binding.retryButton.setOnClickListener {
+            binding.item?.let { retryClickSource.onNext(it) }
         }
         return binding
     }

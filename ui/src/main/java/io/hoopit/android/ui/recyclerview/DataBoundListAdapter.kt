@@ -8,10 +8,9 @@ import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
-import io.hoopit.android.ui.extensions.throttleClicks
 import io.reactivex.Observable
-import io.reactivex.ObservableEmitter
 import io.reactivex.subjects.PublishSubject
+import java.util.concurrent.TimeUnit
 
 /**
  * A generic RecyclerView adapter that uses Data Binding & DiffUtil.
@@ -23,25 +22,15 @@ abstract class DataBoundListAdapter<T, V : ViewDataBinding>(
     private val enableClicks: Boolean = true,
     private val enableLongClicks: Boolean = false,
     differ: DiffUtil.ItemCallback<T> = DefaultDiffUtilItemCallback()
-) : ListAdapter<T, DataBoundViewHolder<V>>(differ) {
+) : ListAdapter<T, DataBoundViewHolder<V>>(differ), IClickAdapter<T> {
 
     var lifecycleOwner: LifecycleOwner? = null
 
-    private var clickEmitter: ObservableEmitter<Observable<T?>>? = null
+    private val clickSource = PublishSubject.create<T>()
+    override val clicks: Observable<T> = clickSource.throttleFirst(500, TimeUnit.MILLISECONDS)
 
-    private val clickSources = mutableListOf<Observable<T?>>()
-    /**
-     * An observable stream of click events.
-     * Subscribe to this to receive click events.
-     */
-    @Suppress("MemberVisibilityCanBePrivate")
-    val clicks: Observable<T> = Observable.create<Observable<T?>> {
-        clickEmitter = it
-        it.onNext(Observable.merge(clickSources))
-    }.flatMap {
-        it
-    }
-    val longClicks = PublishSubject.create<T>()
+    private val longClickSource = PublishSubject.create<T>()
+    override val longClicks: Observable<T> = longClickSource.throttleFirst(500, TimeUnit.MILLISECONDS)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DataBoundViewHolder<V> {
         val binding = createBinding(parent, getLayoutForViewType(viewType))
@@ -64,14 +53,13 @@ abstract class DataBoundListAdapter<T, V : ViewDataBinding>(
             false
         )
         if (enableClicks) {
-            val observable = binding.root.throttleClicks().map {
-                map(binding)
+            binding.root.setOnClickListener {
+                map(binding)?.let(clickSource::onNext)
             }
-            clickEmitter?.onNext(observable) ?: clickSources.add(observable)
         }
         if (enableLongClicks) {
             binding.root.setOnLongClickListener {
-                map(binding)?.let(longClicks::onNext)
+                map(binding)?.let(longClickSource::onNext)
                 true
             }
         }

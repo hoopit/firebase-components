@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
 /***
  * [PagedList.BoundaryCallback] for Firebase list resources
  */
-abstract class FirebasePagedListBoundaryCallback<LocalType, Key>(
+abstract class BaseFirebasePagedListBoundaryCallback<LocalType, Key>(
     private val query: Query,
     private val sortKey: (LocalType) -> Key
 ) : PagedList.BoundaryCallback<LocalType>() {
@@ -90,7 +90,7 @@ abstract class FirebasePagedListBoundaryCallback<LocalType, Key>(
 //    private val cache: FirebasePagedListCache<*, *>,
 //    private val resource: io.hoopit.android.firebaserealtime.core.Scope.Resource,
 //    private val pagedListConfig: PagedList.Config? = null
-//) : FirebasePagedListBoundaryCallback<LocalType, Key>(cache.query, sortKey) {
+//) : BaseFirebasePagedListBoundaryCallback<LocalType, Key>(cache.query, sortKey) {
 //
 //    private val limit = query.spec.params.limit
 //
@@ -157,7 +157,7 @@ class FirebaseSimplePagedListBoundaryCallback<LocalType, Key>(
     private val cache: FirebasePagedListCache<*, *>,
     private val resource: FirebaseScope.Resource,
     private val pagedListConfig: PagedList.Config? = null
-) : FirebasePagedListBoundaryCallback<LocalType, Key>(cache.query, sortKey) {
+) : BaseFirebasePagedListBoundaryCallback<LocalType, Key>(cache.query, sortKey) {
 
     private val limit = query.spec.params.limit
 
@@ -275,7 +275,7 @@ class FirebaseLivePagedListBoundaryCallback<LocalType>(
     }
 }
 
-class FirebaseBoundaryCallback<LocalType : IFirebaseEntity>(
+class FirebasePagedListBoundaryCallback<LocalType : IFirebaseEntity>(
     private val query: Query,
     private val pagedListConfig: PagedList.Config,
     private val descending: Boolean,
@@ -343,24 +343,20 @@ class FirebaseBoundaryCallback<LocalType : IFirebaseEntity>(
         }
 
         override fun childMoved(previousChildName: String?, child: RemoteType) {
-            Timber.d("called: childMoved($previousChildName, ${child.entityId})")
             cache.move(previousChildName, child, descending)
         }
 
         override fun childChanged(previousChildName: String?, child: RemoteType) {
-            Timber.d("called: childChanged($previousChildName, ${child.entityId})")
             cache.update(previousChildName, child, descending)
         }
 
         @Synchronized
         override fun childAdded(previousChildName: String?, child: RemoteType) {
-            Timber.d("called: childAdded($previousChildName, ${child.entityId})")
             cache.add(previousChildName, child, descending)
         }
 
         @Synchronized
         override fun childRemoved(child: RemoteType) {
-            Timber.d("called: childRemoved(${child.entityId})")
             cache.remove(child)
         }
     }

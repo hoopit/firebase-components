@@ -187,7 +187,7 @@ class CustomFirebaseCollection<V : IFirebaseEntity> : FirebaseCollectionBase<V>(
         get() = map.size - 1
 
     override fun update(key: String?, item: V, before: Boolean) {
-        Timber.d("update() called with: key = [$key], item = [$item], before = [$before]")
+//        Timber.d("update() called with: key = [$key], item = [$item], before = [$before]")
         if (before) updateBefore(key, item) else updateAfter(key, item)
         dispatchInvalidate()
     }
@@ -209,7 +209,7 @@ class CustomFirebaseCollection<V : IFirebaseEntity> : FirebaseCollectionBase<V>(
     }
 
     override fun move(key: String?, child: V, before: Boolean) {
-        Timber.d("move() called with: key = [$key], child = [$child], before = [$before]")
+//        Timber.d("move() called with: key = [$key], child = [$child], before = [$before]")
         val moved = if (before) moveBefore(key, child) else moveAfter(key, child)
         if (moved) dispatchInvalidate()
     }
@@ -231,7 +231,7 @@ class CustomFirebaseCollection<V : IFirebaseEntity> : FirebaseCollectionBase<V>(
     }
 
     override fun add(key: String?, child: V, before: Boolean) {
-        Timber.d("add() called with: key = [$key], child = [$child], before = [$before]")
+//        Timber.d("add() called with: key = [$key], child = [$child], before = [$before]")
         val added = if (before) addBefore(key, child) else addAfter(key, child)
         if (added) dispatchInvalidate()
     }
@@ -281,7 +281,7 @@ class CustomFirebaseCollection<V : IFirebaseEntity> : FirebaseCollectionBase<V>(
     }
 
     override fun remove(child: V): Boolean {
-        Timber.d("remove() called with: child = [$child]")
+//        Timber.d("remove() called with: child = [$child]")
         val node = get(child.entityId)
 //        if (tail.item?.entityId == child.entityId) {
 //            tail = requireNotNull(node.prev)
