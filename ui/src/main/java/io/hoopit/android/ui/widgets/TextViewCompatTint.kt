@@ -13,12 +13,24 @@ class TextViewCompatTint @JvmOverloads constructor(
     defStyleAttr: Int = android.R.attr.textViewStyle
 ) : AppCompatTextView(context, attrs, defStyleAttr) {
 
-    private var typedArray = context.obtainStyledAttributes(
-        attrs,
-        R.styleable.TextViewCompatTint,
-        defStyleAttr,
-        0
-    )
+    private var color: Int? = null
+    private var dimens: Float? = null
+
+    init {
+        val attributes = context.obtainStyledAttributes(
+            attrs,
+            R.styleable.TextViewCompatTint,
+            defStyleAttr,
+            0
+        )
+        if (attributes.hasValue(R.styleable.TextViewCompatTint_drawableTint)) {
+            color = attributes.getColor(R.styleable.TextViewCompatTint_drawableTint, 0)
+        }
+        if (attributes.hasValue(R.styleable.TextViewCompatTint_drawableIconSize)) {
+            dimens = attributes.getDimension(R.styleable.TextViewCompatTint_drawableIconSize, 0f)
+        }
+        attributes.recycle()
+    }
 
     override fun setCompoundDrawablesRelative(
         start: Drawable?,
@@ -29,23 +41,17 @@ class TextViewCompatTint @JvmOverloads constructor(
         super.setCompoundDrawablesRelative(start, top, end, bottom)
         for (drawable in compoundDrawablesRelative) {
             if (drawable == null) continue
-            if (typedArray.hasValue(R.styleable.TextViewCompatTint_drawableTint)) {
-                val color = typedArray.getColor(R.styleable.TextViewCompatTint_drawableTint, 0)
+            color?.let {
                 val wrap = DrawableCompat.wrap(drawable.mutate())
-                DrawableCompat.setTint(wrap, color)
-                if (typedArray.hasValue(R.styleable.TextViewCompatTint_drawableIconSize)) {
-                    val dimens = typedArray.getDimension(
-                        R.styleable.TextViewCompatTint_drawableIconSize,
-                        0f
-                    )
-                    val inset =
-                        Math.round((resources.displayMetrics.density * DEFAULT_SIZE - dimens) / DIVIDER)
-                    val size = Math.round(dimens)
-                    drawable.setBounds(0 + inset, 0 + inset, size + inset, size + inset)
-                }
+                DrawableCompat.setTint(wrap, it)
+            }
+            dimens?.let {
+                val inset =
+                    Math.round((resources.displayMetrics.density * DEFAULT_SIZE - it) / DIVIDER)
+                val size = Math.round(it)
+                drawable.setBounds(0 + inset, 0 + inset, size + inset, size + inset)
             }
         }
-        typedArray.recycle()
     }
 
     companion object {
