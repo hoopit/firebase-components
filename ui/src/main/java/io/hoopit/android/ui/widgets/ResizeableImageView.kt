@@ -17,7 +17,7 @@ class ResizeableImageView(context: Context, attrs: AttributeSet) : AppCompatImag
             val height =
                 Math.ceil(
                     (width.toFloat() * imageDrawable.intrinsicHeight.toFloat() /
-                            imageDrawable.intrinsicWidth.toFloat())
+                        imageDrawable.intrinsicWidth.toFloat())
                         .toDouble()
                 )
                     .toInt()
