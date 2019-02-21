@@ -133,15 +133,30 @@ fun <T> mediatorLiveData(newValue: T?): MediatorLiveData<T> {
     return data
 }
 
-fun <TSOURCE, TOUT> mediatorLiveDataUpdate(
+inline fun <TSOURCE, TOUT> mediatorLiveDataUpdate(
     source: LiveData<TSOURCE>,
-    onChanged: (TSOURCE?) -> TOUT
+    crossinline onChanged: (TSOURCE) -> TOUT
 ): MediatorLiveData<TOUT> {
     val liveData = MediatorLiveData<TOUT>()
     liveData.addSource(source) {
         liveData.postValue(onChanged(it))
     }
     return liveData
+}
+
+inline fun <TSOURCE> LiveData<TSOURCE>.doOnUpdate(
+    crossinline onChanged: (TSOURCE) -> Unit
+): MediatorLiveData<TSOURCE> {
+    val liveData = MediatorLiveData<TSOURCE>()
+    liveData.addSource(this) {
+        onChanged(it)
+        liveData.postValue(it)
+    }
+    return liveData
+}
+
+fun <TSOURCE> MediatorLiveData<TSOURCE>.mergeUpdate(source: LiveData<TSOURCE>) {
+    addSource(source, this::postUpdate)
 }
 
 fun <TSOURCE, TOUT> mediatorLiveData(
