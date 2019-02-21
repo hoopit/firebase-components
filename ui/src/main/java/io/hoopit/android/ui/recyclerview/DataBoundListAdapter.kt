@@ -89,10 +89,12 @@ abstract class DataBoundListAdapter<T, V : ViewDataBinding>(
      * This is used to attach a click listener
      */
     open fun map(binding: V): T? {
-        throw NotImplementedError("map must be implemented or enableClicks must be set to false")
+        // TODO: log
+        return null
     }
 }
 
+// TODO: remove, require diff
 class DefaultDiffUtilItemCallback<T> : DiffUtil.ItemCallback<T>() {
     override fun areItemsTheSame(oldItem: T, newItem: T) = oldItem == newItem
     override fun areContentsTheSame(oldItem: T, newItem: T) = oldItem == newItem

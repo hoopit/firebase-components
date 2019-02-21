@@ -216,6 +216,7 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
      * This is used to attach a click listener
      */
     open fun map(binding: V): T? {
-        throw NotImplementedError("map must be implemented or disableClicks must be set to false")
+        // TODO: log
+        return null
     }
 }
