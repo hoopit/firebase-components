@@ -15,6 +15,18 @@ import androidx.core.content.FileProvider
 import java.io.File
 import java.util.UUID
 
+fun Context.getDpi(): String {
+    val density = resources.displayMetrics.density
+    return when {
+        density >= 4.0 -> "xxxhdpi"
+        density >= 3.0 -> "xxhdpi"
+        density >= 2.0 -> "xhdpi"
+        density >= 1.5 -> "hdpi"
+        density >= 1.0 -> "mdpi"
+        else -> "ldpi"
+    }
+}
+
 fun Activity?.hideSoftInput() {
     if (this == null) return
     val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
