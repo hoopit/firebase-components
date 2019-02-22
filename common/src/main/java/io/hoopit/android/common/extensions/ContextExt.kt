@@ -4,12 +4,16 @@ import android.app.Activity
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.StringRes
+import androidx.core.content.FileProvider
+import java.io.File
+import java.util.UUID
 
 fun Activity?.hideSoftInput() {
     if (this == null) return
@@ -42,6 +46,14 @@ fun Context.getStringOrDefault(
     }
 }
 
+fun Context.getExternalCacheUri(): Uri {
+    return FileProvider.getUriForFile(
+        this,
+        applicationContext.packageName + ".provider",
+        File(externalCacheDir, UUID.randomUUID().toString() + ".jpg")
+    )
+}
+
 // https://learnpainless.com/android/material/make-fully-android-transparent-status-bar
 fun Activity.enableTransparentStatusBar() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
@@ -49,7 +61,7 @@ fun Activity.enableTransparentStatusBar() {
     }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
     }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
