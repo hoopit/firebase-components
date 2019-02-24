@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
 
@@ -20,7 +21,7 @@
 
         <TextView
             android:id="@+id/error_msg"
-            visibleGone="@{item.msg != null}"
+            app:visibleGone="@{item.msg != null}"
             android:textAppearance="?attr/textAppearanceBody2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -30,7 +31,7 @@
         <ProgressBar
             android:id="@+id/progress_bar"
             style="?android:attr/progressBarStyle"
-            visibleGone="@{item.status == NetworkState.Status.RUNNING}"
+            app:visibleGone="@{item.status == NetworkState.Status.RUNNING}"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center" />
@@ -38,7 +39,7 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/retry_button"
             style="@style/Widget.AppCompat.Button.Colored"
-            visibleGone="@{item.status == NetworkState.Status.FAILED}"
+            app:visibleGone="@{item.status == NetworkState.Status.FAILED}"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"

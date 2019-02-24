@@ -1,4 +1,4 @@
-@file:Suppress("unused")
+//@file:Suppress("unused")
 
 package io.hoopit.android.ui
 
@@ -6,10 +6,8 @@ import android.content.res.ColorStateList
 import android.view.View
 import android.widget.CompoundButton
 import android.widget.ImageView
-import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.annotation.StringRes
-import androidx.appcompat.widget.TooltipCompat
 import androidx.core.widget.ImageViewCompat
 import androidx.databinding.BindingAdapter
 import androidx.databinding.BindingMethod
@@ -43,35 +41,30 @@ import io.hoopit.android.ui.widgets.ResetErrorTextWatcher
 )
 class AndroidUiBindingAdapters
 
-@BindingAdapter("capitalText")
-fun TextView.capitalize(value: String?) {
-    text = value?.capitalize()
-}
+///**
+// * Compat version of tooltip[]
+// */
+//@BindingAdapter("app:tooltipText")
+//fun View.setTooltip(tooltipText: String) {
+//    TooltipCompat.setTooltipText(this, tooltipText)
+//}
 
-/**
- * Compat version of tooltip
- */
-@BindingAdapter("tooltip")
-fun View.setTooltip(tooltipText: String) {
-    TooltipCompat.setTooltipText(this, tooltipText)
-}
-
-@set:BindingAdapter("visibleGone")
+@set:BindingAdapter("app:visibleGone")
 var View.visibleOrGone
     get() = visibility == View.VISIBLE
     set(value) {
         visibility = if (value) View.VISIBLE else View.GONE
     }
 
-@BindingAdapter("goneVisible")
-fun View.visibleGone(value: Boolean?) {
+@BindingAdapter("app:goneVisible")
+fun View.goneVisible(value: Boolean?) {
     value?.let {
         visibility = if (it) View.GONE else View.VISIBLE
     }
 }
 
-@set:BindingAdapter("visibleHidden")
-var View.visibleOrHidden
+@set:BindingAdapter("app:visibleHidden")
+var View.visibleHidden
     get() = visibility == View.VISIBLE
     set(value) {
         visibility = if (value) View.VISIBLE else View.INVISIBLE
@@ -80,7 +73,7 @@ var View.visibleOrHidden
 /**
  * Set the error of a the TIL to a string resource
  */
-@BindingAdapter("errorText")
+@BindingAdapter("app:errorText")
 fun TextInputLayout.setErrorMessage(@StringRes errorMessage: Int?) {
     error = if (errorMessage == null) {
         null
@@ -91,7 +84,7 @@ fun TextInputLayout.setErrorMessage(@StringRes errorMessage: Int?) {
     }
 }
 
-@BindingAdapter("tint")
+@BindingAdapter("app:tint")
 fun ImageView.imageTint(@ColorInt colorRes: Int) {
     ImageViewCompat.setImageTintList(
         this,
