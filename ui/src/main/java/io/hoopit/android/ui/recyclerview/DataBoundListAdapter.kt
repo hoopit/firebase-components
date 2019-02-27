@@ -19,12 +19,25 @@ import java.util.concurrent.TimeUnit
  * @param <V> The type of the ViewDataBinding
 </V></T> */
 abstract class DataBoundListAdapter<T, V : ViewDataBinding>(
+    differ: DiffUtil.ItemCallback<T>,
+    var lifecycleOwner: LifecycleOwner? = null,
     private val enableClicks: Boolean = true,
     private val enableLongClicks: Boolean = false,
-    differ: DiffUtil.ItemCallback<T> = DefaultDiffUtilItemCallback()
+    hasStableIds: Boolean = false
 ) : ListAdapter<T, DataBoundViewHolder<V>>(differ), IClickAdapter<T> {
 
-    var lifecycleOwner: LifecycleOwner? = null
+    init {
+        setHasStableIds(hasStableIds)
+    }
+
+    final override fun setHasStableIds(hasStableIds: Boolean) {
+        super.setHasStableIds(hasStableIds)
+    }
+
+    override fun getItemId(position: Int): Long {
+        check(!hasStableIds()) { "You need to override getItemId when hasStableIds = true" }
+        return 0
+    }
 
     private val clickSource = PublishSubject.create<T>()
     override val clicks: Observable<T> = clickSource.throttleFirst(500, TimeUnit.MILLISECONDS)
@@ -67,7 +80,7 @@ abstract class DataBoundListAdapter<T, V : ViewDataBinding>(
     }
 
     override fun onBindViewHolder(holder: DataBoundViewHolder<V>, position: Int) {
-        holder.binding.setLifecycleOwner(lifecycleOwner)
+        holder.binding.lifecycleOwner = lifecycleOwner
         bind(holder.binding, getItem(position), position)
         holder.binding.executePendingBindings()
     }
@@ -92,10 +105,11 @@ abstract class DataBoundListAdapter<T, V : ViewDataBinding>(
         // TODO: log
         return null
     }
+
+    class DefaultDiffUtilItemCallback<T> : DiffUtil.ItemCallback<T>() {
+        override fun areItemsTheSame(oldItem: T, newItem: T) = oldItem == newItem
+        override fun areContentsTheSame(oldItem: T, newItem: T) = oldItem == newItem
+    }
 }
 
-// TODO: remove, require diff
-class DefaultDiffUtilItemCallback<T> : DiffUtil.ItemCallback<T>() {
-    override fun areItemsTheSame(oldItem: T, newItem: T) = oldItem == newItem
-    override fun areContentsTheSame(oldItem: T, newItem: T) = oldItem == newItem
-}
+

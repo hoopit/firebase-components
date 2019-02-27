@@ -181,7 +181,7 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
 
     @Suppress("UNCHECKED_CAST", "UnsafeCast")
     override fun onBindViewHolder(holder: DataBoundViewHolder<*>, position: Int) {
-        holder.binding.setLifecycleOwner(lifecycleOwner)
+        holder.binding.lifecycleOwner = lifecycleOwner
         when (getItemViewType(position)) {
             FRONT_LOADING_INDICATOR -> {
                 holder.binding as NetworkStateItemBinding
