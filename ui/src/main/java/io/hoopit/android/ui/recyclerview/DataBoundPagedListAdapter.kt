@@ -6,6 +6,7 @@ import androidx.annotation.LayoutRes
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.LifecycleOwner
+import androidx.paging.PagedList
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import io.hoopit.android.ui.NetworkState
@@ -28,7 +29,7 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
     var lifecycleOwner: LifecycleOwner? = null,
     private val endLoadingIndicator: Boolean = true,
     private val frontLoadingIndicator: Boolean = false
-) : PagedListAdapter<T, DataBoundViewHolder<*>>(differ), IClickAdapter<T> {
+) : PagedListAdapter<T, DataBoundViewHolder<*>>(differ), IAdapter<T> {
 
     @LayoutRes
     private val networkStateRes = R.layout.network_state_item
@@ -61,6 +62,11 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
     override fun getItem(position: Int): T? {
         return if (position < super.getItemCount() && position >= 0) super.getItem(position)
         else null
+    }
+
+    override fun submit(list: List<T>?, callback: Runnable?) {
+        require(list is PagedList)
+        submitList(list, callback)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DataBoundViewHolder<*> {

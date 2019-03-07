@@ -24,11 +24,13 @@ abstract class DataBoundListAdapter<T, V : ViewDataBinding>(
     private val enableClicks: Boolean = true,
     private val enableLongClicks: Boolean = false,
     hasStableIds: Boolean = false
-) : ListAdapter<T, DataBoundViewHolder<V>>(differ), IClickAdapter<T> {
+) : ListAdapter<T, DataBoundViewHolder<V>>(differ), IAdapter<T> {
 
     init {
         setHasStableIds(hasStableIds)
     }
+
+    override fun submit(list: List<T>?, callback: Runnable?) = submitList(list)
 
     final override fun setHasStableIds(hasStableIds: Boolean) {
         super.setHasStableIds(hasStableIds)
