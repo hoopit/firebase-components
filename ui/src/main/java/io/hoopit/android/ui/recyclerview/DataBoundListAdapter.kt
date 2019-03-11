@@ -57,6 +57,18 @@ abstract class DataBoundListAdapter<T, V : ViewDataBinding>(
         return defaultLayoutRes
     }
 
+    var onClickListener: (T) -> Unit = clickSource::onNext
+
+    var onLongClickListener: (T) -> Unit = longClickSource::onNext
+
+    protected fun onClick(binding: V) {
+        map(binding)?.let { onClickListener(it) }
+    }
+
+    protected fun onLongClick(binding: V) {
+        map(binding)?.let { onLongClickListener(it) }
+    }
+
     /**
      * Override this to customize the view binding
      */
@@ -69,12 +81,12 @@ abstract class DataBoundListAdapter<T, V : ViewDataBinding>(
         )
         if (enableClicks) {
             binding.root.setOnClickListener {
-                map(binding)?.let(clickSource::onNext)
+                onClick(binding)
             }
         }
         if (enableLongClicks) {
             binding.root.setOnLongClickListener {
-                map(binding)?.let(longClickSource::onNext)
+                onLongClick(binding)
                 true
             }
         }

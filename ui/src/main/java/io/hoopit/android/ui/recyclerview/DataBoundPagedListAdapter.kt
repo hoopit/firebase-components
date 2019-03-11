@@ -50,13 +50,13 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
      * An observable stream of click events.
      * Subscribe to this to receive click events.
      */
-    private val clickSource = PublishSubject.create<T>()
+    protected val clickSource = PublishSubject.create<T>()
     final override val clicks: Observable<T> = clickSource.throttleFirst(clickThrottle, TimeUnit.MILLISECONDS)
 
-    private val longClickSource = PublishSubject.create<T>()
+    protected val longClickSource = PublishSubject.create<T>()
     override val longClicks: Observable<T> = longClickSource.throttleFirst(clickThrottle, TimeUnit.MILLISECONDS)
 
-    private val retryClickSource = PublishSubject.create<NetworkState>()
+    protected val retryClickSource = PublishSubject.create<NetworkState>()
     val retryClicks: Observable<NetworkState> = retryClickSource.throttleFirst(clickThrottle, TimeUnit.MILLISECONDS)
 
     override fun getItem(position: Int): T? {
