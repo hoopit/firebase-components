@@ -6,6 +6,7 @@ import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
 import io.hoopit.android.common.livedata.DelayedDisconnectLiveData
 import io.hoopit.android.firebaserealtime.core.IFirebaseEntity
+import io.hoopit.android.firebaserealtime.ext.getValueOrNull
 import kotlin.reflect.KClass
 
 class FirebaseValueLiveData<T : Any>(
@@ -22,7 +23,7 @@ class FirebaseValueLiveData<T : Any>(
     override fun onCancelled(error: DatabaseError) {}
 
     override fun onDataChange(snapshot: DataSnapshot) {
-        val item = snapshot.getValue(classModel.java)
+        val item = snapshot.getValueOrNull(classModel)
         if (item is IFirebaseEntity) item.init(snapshot)
         postValue(item)
     }

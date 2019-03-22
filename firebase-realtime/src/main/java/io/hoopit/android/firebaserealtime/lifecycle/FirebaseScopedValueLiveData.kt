@@ -6,6 +6,7 @@ import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
 import io.hoopit.android.firebaserealtime.cache.IManagedCache
 import io.hoopit.android.firebaserealtime.core.FirebaseScope
+import io.hoopit.android.firebaserealtime.ext.getValueOrNull
 import kotlin.reflect.KClass
 
 class FirebaseScopedValueLiveData<T : Any>(
@@ -25,6 +26,6 @@ class FirebaseScopedValueLiveData<T : Any>(
     }
 
     override fun onDataChange(snapshot: DataSnapshot) {
-        value = snapshot.getValue(clazz.java)
+        value = snapshot.getValueOrNull(clazz)
     }
 }
