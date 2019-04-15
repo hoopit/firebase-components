@@ -92,6 +92,11 @@ fun <X, Y> LiveData<X>.map(func: (X) -> Y): LiveData<Y> = Transformations.map(th
 /**
  * Extension wrapper for [Transformations.map]
  */
+fun <X> LiveData<X>.toMutable(): MediatorLiveData<X> = mediatorLiveDataUpdate(this) { it }
+
+/**
+ * Extension wrapper for [Transformations.map]
+ */
 inline fun <X, Y> LiveData<X>.mapUpdate(crossinline func: (X) -> Y): LiveData<Y> {
     val result = MediatorLiveData<Y>()
     result.addSource(this) { x -> result.update(func(x)) }
@@ -167,6 +172,36 @@ fun <TSOURCE, TOUT> mediatorLiveData(
     val liveData = MediatorLiveData<TOUT>()
     initial?.let { liveData.postValue(it) }
     liveData.addSource(source) { onChanged(liveData, it) }
+    return liveData
+}
+
+fun <X, Y, Z> combinedLiveData(
+    leftSrc: LiveData<X?>,
+    rightSrc: LiveData<Y?>,
+    onChanged: (X, Y) -> Z
+): MediatorLiveData<Z> {
+    val liveData = MediatorLiveData<Z>()
+    liveData.addSource(leftSrc) { leftVal ->
+        leftVal?.let {
+            liveData.addSource(rightSrc) { rightVal ->
+                rightVal?.let {
+                    liveData.removeSource(rightSrc)
+                    liveData.value = onChanged(leftVal, it)
+                }
+            }
+        }
+    }
+
+    liveData.addSource(rightSrc) { rightVal ->
+        rightVal?.let {
+            liveData.addSource(leftSrc) { leftVal ->
+                leftVal?.let {
+                    liveData.removeSource(rightSrc)
+                    liveData.value = onChanged(it, rightVal)
+                }
+            }
+        }
+    }
     return liveData
 }
 
