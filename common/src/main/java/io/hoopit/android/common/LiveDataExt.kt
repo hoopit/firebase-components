@@ -175,7 +175,7 @@ fun <TSOURCE, TOUT> mediatorLiveData(
     return liveData
 }
 
-fun <X, Y, Z> combinedLiveData(
+fun <X, Y, Z> combineLatest(
     leftSrc: LiveData<X?>,
     rightSrc: LiveData<Y?>,
     onChanged: (X, Y) -> Z
@@ -183,25 +183,26 @@ fun <X, Y, Z> combinedLiveData(
     val liveData = MediatorLiveData<Z>()
     liveData.addSource(leftSrc) { leftVal ->
         leftVal?.let {
-            liveData.addSource(rightSrc) { rightVal ->
-                rightVal?.let {
-                    liveData.removeSource(rightSrc)
-                    liveData.value = onChanged(leftVal, it)
-                }
-            }
+            rightSrc.value?.let { liveData.value = onChanged(leftVal, it) }
         }
     }
 
     liveData.addSource(rightSrc) { rightVal ->
         rightVal?.let {
-            liveData.addSource(leftSrc) { leftVal ->
-                leftVal?.let {
-                    liveData.removeSource(rightSrc)
-                    liveData.value = onChanged(it, rightVal)
-                }
-            }
+            leftSrc.value?.let { liveData.value = onChanged(it, rightVal) }
         }
     }
+    return liveData
+}
+
+fun <X, Y, Z> combineLatestWithNull(
+    leftSrc: LiveData<X?>,
+    rightSrc: LiveData<Y?>,
+    onChanged: (X?, Y?) -> Z
+): MediatorLiveData<Z> {
+    val liveData = MediatorLiveData<Z>()
+    liveData.addSource(leftSrc) { liveData.value = onChanged(it, rightSrc.value) }
+    liveData.addSource(rightSrc) { liveData.value = onChanged(leftSrc.value, it) }
     return liveData
 }
 
