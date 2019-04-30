@@ -176,8 +176,8 @@ fun <TSOURCE, TOUT> mediatorLiveData(
 }
 
 fun <X, Y, Z> combineLatest(
-    leftSrc: LiveData<X?>,
-    rightSrc: LiveData<Y?>,
+    leftSrc: LiveData<X>,
+    rightSrc: LiveData<Y>,
     onChanged: (X, Y) -> Z
 ): MediatorLiveData<Z> {
     val liveData = MediatorLiveData<Z>()
