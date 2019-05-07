@@ -206,6 +206,15 @@ fun <X, Y, Z> combineLatestWithNull(
     return liveData
 }
 
+fun <T, X, Y> MediatorLiveData<T>.addSources(
+    leftSrc: LiveData<X?>,
+    rightSrc: LiveData<Y?>,
+    onChanged: (X?, Y?) -> T
+) {
+    addSource(leftSrc) { value = onChanged(it, rightSrc.value) }
+    addSource(rightSrc) { value = onChanged(leftSrc.value, it) }
+}
+
 fun <T> MediatorLiveData<T>.reObserveFirst(src: LiveData<T?>, onChanged: (T?) -> Unit) {
     this.removeSource(src)
     this.addSource(src) {
