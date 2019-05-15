@@ -5,8 +5,6 @@ if (System.getenv('JITPACK') != null) {
     apply plugin: 'com.github.dcendents.android-maven'
 }
 
-//group='com.github.hoopit'
-
 android {
     compileSdkVersion 28
 
