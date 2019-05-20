@@ -134,7 +134,7 @@ fun <T> mutableLiveData(newValue: T): MutableLiveData<T> {
 
 fun <T> mediatorLiveData(newValue: T?): MediatorLiveData<T> {
     val data = MediatorLiveData<T>()
-    data.postValue(newValue)
+    data.value = newValue
     return data
 }
 
