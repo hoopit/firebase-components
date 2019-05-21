@@ -2,7 +2,6 @@
 <resources>
     <declare-styleable name="TextViewCompatTint">
         <attr name="drawableTint" format="reference|color" />
-        <attr name="drawableTintMode" format="reference" />
         <attr name="drawableIconSize" format="reference|dimension" />
     </declare-styleable>
 
