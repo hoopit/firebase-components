@@ -301,7 +301,7 @@ class BadgeView @JvmOverloads constructor(
 
     private fun setHorizontalBadgeMargin(value: Int): Int {
         return when {
-            value >= DEFAULT_NUMBER -> BadgeView.BOTTOM_NAVIGATION_HORIZONTAL_MARGIN
+            value >= DEFAULT_NUMBER -> BOTTOM_NAVIGATION_HORIZONTAL_MARGIN
             else -> DEFAULT_BOTTOM_NAVIGATION_MARGIN
         }
     }
