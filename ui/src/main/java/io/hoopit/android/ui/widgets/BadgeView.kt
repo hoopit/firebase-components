@@ -220,6 +220,7 @@ class BadgeView @JvmOverloads constructor(
             return
         }
         val text = if (value > upperBound) "$upperBound$limitSuffix" else value.toString()
+        horizontalBadgeMargin = setHorizontalBadgeMargin(value)
         showText(text, true)
     }
 
@@ -293,6 +294,18 @@ class BadgeView @JvmOverloads constructor(
         return px.toInt()
     }
 
+    /*
+    * @method : set horizontal margin according to number
+    *
+    * */
+
+    private fun setHorizontalBadgeMargin(value: Int): Int {
+        return when {
+            value >= DEFAULT_NUMBER -> BOTTOM_NAVIGATION_HORIZONTAL_MARGIN
+            else -> DEFAULT_BOTTOM_NAVIGATION_MARGIN
+        }
+    }
+
     companion object {
         const val POSITION_TOP_LEFT = 1
         const val POSITION_TOP_RIGHT = 2
@@ -300,7 +313,7 @@ class BadgeView @JvmOverloads constructor(
         const val POSITION_BOTTOM_RIGHT = 4
         const val POSITION_CENTER = 5
         const val POSITION_BOTTOM_NAVIGATION = 6
-        private const val DEFAULT_LR_PADDING_DIP = 3
+        private const val DEFAULT_LR_PADDING_DIP = 6
         private const val DEFAULT_CORNER_RADIUS_DIP = 20
         private const val DEFAULT_TEXT_COLOR = Color.WHITE
         private const val DURATION = 300L
@@ -308,7 +321,9 @@ class BadgeView @JvmOverloads constructor(
         private const val DEFAULT_UPPER_BOUND = 99
         private const val DEFAULT_UPPER_BOUND_SUFFIX = "+"
         private const val DEFAULT_BOTTOM_NAVIGATION_MARGIN = 8
+        private const val BOTTOM_NAVIGATION_HORIZONTAL_MARGIN = 13
         private const val DEFAULT_UPDATE_SCALE = 1.3f
+        private const val DEFAULT_NUMBER = 10
     }
 }
 
