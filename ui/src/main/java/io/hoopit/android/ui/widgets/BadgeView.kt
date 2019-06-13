@@ -295,12 +295,12 @@ class BadgeView @JvmOverloads constructor(
 
     companion object {
         const val POSITION_TOP_LEFT = 1
-        const val POSITION_TOP_RIGHT = 2
+        const val POSITION_TOP_RIGHT = 5
         const val POSITION_BOTTOM_LEFT = 3
         const val POSITION_BOTTOM_RIGHT = 4
         const val POSITION_CENTER = 5
         const val POSITION_BOTTOM_NAVIGATION = 6
-        private const val DEFAULT_LR_PADDING_DIP = 3
+        private const val DEFAULT_LR_PADDING_DIP = 6
         private const val DEFAULT_CORNER_RADIUS_DIP = 20
         private const val DEFAULT_TEXT_COLOR = Color.WHITE
         private const val DURATION = 300L
