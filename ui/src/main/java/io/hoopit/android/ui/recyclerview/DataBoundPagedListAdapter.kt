@@ -9,9 +9,12 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.paging.PagedList
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
+import com.jakewharton.rxbinding3.view.longClicks
 import io.hoopit.android.ui.NetworkState
 import io.hoopit.android.ui.R
 import io.hoopit.android.ui.databinding.NetworkStateItemBinding
+import io.hoopit.android.ui.extensions.throttle
+import io.hoopit.android.ui.extensions.throttleClicks
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import java.util.concurrent.TimeUnit
@@ -38,7 +41,7 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
 
     private var frontLoadingState: NetworkState? = null
 
-    private val clickThrottle: Long = 500L
+    protected open val clickThrottle: Long = 500L
 
     companion object {
         const val DEFAULT_LAYOUT = 84740
@@ -51,13 +54,14 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
      * Subscribe to this to receive click events.
      */
     protected val clickSource = PublishSubject.create<T>()
-    final override val clicks: Observable<T> = clickSource.throttleFirst(clickThrottle, TimeUnit.MILLISECONDS)
+    final override val clicks: Observable<T> = clickSource
 
     protected val longClickSource = PublishSubject.create<T>()
-    override val longClicks: Observable<T> = longClickSource.throttleFirst(clickThrottle, TimeUnit.MILLISECONDS)
+    override val longClicks: Observable<T> = longClickSource
 
     protected val retryClickSource = PublishSubject.create<NetworkState>()
-    val retryClicks: Observable<NetworkState> = retryClickSource.throttleFirst(clickThrottle, TimeUnit.MILLISECONDS)
+    val retryClicks: Observable<NetworkState> =
+        retryClickSource.throttleFirst(clickThrottle, TimeUnit.MILLISECONDS)
 
     override fun getItem(position: Int): T? {
         return if (position < super.getItemCount() && position >= 0) super.getItem(position)
@@ -155,15 +159,21 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
             false
         )
         if (enableClicks) {
-            binding.root.setOnClickListener {
-                map(binding)?.let(clickSource::onNext)
-            }
+            val sub = binding.root
+                .throttleClicks(clickThrottle).subscribe { map(binding)?.let(clickSource::onNext) }
+//            binding.root.setOnClickListener {
+//                map(binding)?.let(clickSource::onNext)
+//            }
         }
         if (enableLongClicks) {
-            binding.root.setOnLongClickListener {
-                map(binding)?.let(longClickSource::onNext)
-                true
-            }
+            val sub = binding.root
+                .longClicks { true }.throttle(clickThrottle)
+                .subscribe { map(binding)?.let(clickSource::onNext) }
+
+//            binding.root.setOnLongClickListener {
+//                map(binding)?.let(longClickSource::onNext)
+//                true
+//            }
         }
         return binding
     }
@@ -211,6 +221,7 @@ abstract class DataBoundPagedListAdapter<T, V : ViewDataBinding>(
     protected abstract fun bind(binding: V, item: T?, position: Int)
 
     /**
+     * The [LayoutRes] for the RecyclerView item
      * The [LayoutRes] for the RecyclerView item
      * This is used to inflate the view.
      */
