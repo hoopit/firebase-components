@@ -36,10 +36,11 @@ ext {
     constraintlayout_version = '2.0.0-beta2'
     rxbinding_version = '3.0.0-alpha2'
     paging_version = '2.1.0'
+
 }
 
 ext {
-    firebase_database_version = "18.0.0"
+    firebase_bom_version = "20.1.0"
     mavenGradleVersion = "2.1"
     timber_version = "4.7.1"
 }

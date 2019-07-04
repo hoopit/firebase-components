@@ -3,6 +3,8 @@ package io.hoopit.android.firebaserealtime.core
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.Query
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 /**
  * Interface for firebase object.
@@ -25,6 +27,10 @@ abstract class FirebaseEntity : IFirebaseEntity {
     override fun init(snapshot: DataSnapshot) {
         entityId = snapshot.key ?: ""
         ref = snapshot.ref
+    }
+
+    suspend fun delete() = suspendCoroutine<Boolean> { c ->
+        ref.removeValue().continueWith { c.resume(it.isSuccessful) }
     }
 
     override fun toString(): String = entityId
@@ -50,7 +56,8 @@ abstract class FirebaseCompositeResource(
 /**
  * An enhanced version of FirebaseEntity, which enables scopes and composite resources.
  */
-abstract class FirebaseScopedResource(override val disconnectDelay: Long) : FirebaseEntity(), IFirebaseResource {
+abstract class FirebaseScopedResource(override val disconnectDelay: Long) : FirebaseEntity(),
+    IFirebaseResource {
     lateinit var firebaseScope: FirebaseScope
         private set
     lateinit var query: Query

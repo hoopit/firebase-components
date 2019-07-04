@@ -15,7 +15,8 @@ class FirebaseListLiveData<T : IFirebaseEntity>(
 
     private val collection = CustomFirebaseCollection<T>()
 
-    private val descending = query.spec.params.hasAnchoredLimit() && !query.spec.params.isViewFromLeft
+    private val descending =
+        query.spec.params.hasAnchoredLimit() && !query.spec.params.isViewFromLeft
 
     private fun invalidated() {
         val items = collection.getRange(0, collection.size)
@@ -51,6 +52,6 @@ class FirebaseListLiveData<T : IFirebaseEntity>(
 
     override fun delayedOnInactive() {
         query.removeEventListener(listener)
-        collection.clear(invalidate = false)
+        collection.clear(invalidate = true)
     }
 }
