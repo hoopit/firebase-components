@@ -10,12 +10,6 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.Transformations
 
 /**
- * Extension wrapper for [LiveData.observe]
- */
-fun <T> LiveData<T>.observe(owner: LifecycleOwner, observer: (T) -> Unit) =
-    observe(owner, Observer<T> { v -> observer.invoke(v) })
-
-/**
  * Observes the first non-null value and then removes the observer
  */
 fun <T> LiveData<T>.observeFirstNotNull(owner: LifecycleOwner, observer: (T) -> Unit) {
@@ -44,7 +38,11 @@ fun <T> LiveData<T>.observeFirst(owner: LifecycleOwner, observer: (T?) -> Unit) 
 /**
  * Observes the first non-null value and then removes the observer
  */
-fun <T> LiveData<T>.observeUntil(owner: LifecycleOwner, until: (T) -> Boolean, observer: (T?) -> Unit) {
+fun <T> LiveData<T>.observeUntil(
+    owner: LifecycleOwner,
+    until: (T) -> Boolean,
+    observer: (T?) -> Unit
+) {
     var observerWrapper: Observer<T>? = null
     observerWrapper = Observer { t ->
         if (until(t)) removeObserver(requireNotNull(observerWrapper))
@@ -82,12 +80,8 @@ fun <T> LiveData<T>.observeFirstForever(observer: (T?) -> Unit) {
 /**
  * Extension wrapper for [Transformations.switchMap]
  */
-fun <X, Y> LiveData<X>.switchMap(func: (X) -> LiveData<Y>?): LiveData<Y> = Transformations.switchMap(this, func)
-
-/**
- * Extension wrapper for [Transformations.map]
- */
-fun <X, Y> LiveData<X>.map(func: (X) -> Y): LiveData<Y> = Transformations.map(this, func)
+fun <X, Y> LiveData<X>.switchMap(func: (X) -> LiveData<Y>?): LiveData<Y> =
+    Transformations.switchMap(this, func)
 
 /**
  * Extension wrapper for [Transformations.map]
