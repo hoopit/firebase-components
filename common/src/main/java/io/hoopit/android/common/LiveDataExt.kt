@@ -113,7 +113,7 @@ fun <T> MutableLiveData<T>.postUpdate(newValue: T) {
 }
 
 fun <T> liveData(value: T?): LiveData<T> {
-    return mutableLiveData(value)
+    return MutableLiveData<T>().also { it.postValue(value) }
 }
 
 fun <T> noLiveData(): LiveData<T> {
