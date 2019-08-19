@@ -8,7 +8,8 @@ import io.hoopit.android.common.extensions.getStringOrDefault
 data class NetworkState private constructor(
     val status: Status,
     val msg: String? = null,
-    @StringRes val stringRes: Int? = null
+    @StringRes val stringRes: Int? = null,
+    val data: Map<String, *>? = null
 ) {
 
     fun getErrorMessage(context: Context): String? {
@@ -19,22 +20,25 @@ data class NetworkState private constructor(
         val success = NetworkState(Status.SUCCESS)
         val loading = NetworkState(Status.RUNNING)
 
-        fun error(msg: String?) = NetworkState(
-            Status.FAILED,
-            msg = msg
-        )
-
-        fun error(@StringRes stringRes: Int?) = NetworkState(
-            Status.FAILED,
-            stringRes = stringRes
-        )
-
-        fun error(msg: String?, @StringRes stringRes: Int?) = NetworkState(
+        fun error(msg: String?, data: Map<String, *>? = null) = NetworkState(
             Status.FAILED,
             msg = msg,
-            stringRes = stringRes
-
+            data = data
         )
+
+        fun error(@StringRes stringRes: Int?, data: Map<String, *>? = null) = NetworkState(
+            Status.FAILED,
+            stringRes = stringRes,
+            data = data
+        )
+
+        fun error(msg: String?, @StringRes stringRes: Int?, data: Map<String, *>? = null) =
+            NetworkState(
+                Status.FAILED,
+                msg = msg,
+                stringRes = stringRes,
+                data = data
+            )
     }
 
     enum class Status {
