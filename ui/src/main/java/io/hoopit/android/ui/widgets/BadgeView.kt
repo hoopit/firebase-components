@@ -128,7 +128,11 @@ class BadgeView @JvmOverloads constructor(
      * @param target the View to attach the badge to.
      */
     @Suppress("unused")
-    constructor(context: Context, target: View) : this(context, null, android.R.attr.textViewStyle) {
+    constructor(context: Context, target: View) : this(
+        context,
+        null,
+        android.R.attr.textViewStyle
+    ) {
         val parentGroup = target.parent as? ViewGroup ?: return
         val container = FrameLayout(context)
         val index = parentGroup.indexOfChild(target)
@@ -166,12 +170,16 @@ class BadgeView @JvmOverloads constructor(
         )
     }
 
-    constructor(context: Context, bottomNavigationView: BottomNavigationView, @IdRes viewId: Int) : this(
+    constructor(
+        context: Context,
+        bottomNavigationView: BottomNavigationView, @IdRes viewId: Int
+    ) : this(
         context,
         null,
         android.R.attr.textViewStyle
     ) {
-        val menuView = requireNotNull(bottomNavigationView.getChildAt(0) as? BottomNavigationMenuView)
+        val menuView =
+            requireNotNull(bottomNavigationView.getChildAt(0) as? BottomNavigationMenuView)
         val itemView = menuView.findViewById<BottomNavigationItemView>(viewId)
         itemView.addView(this)
         horizontalBadgeMargin = DEFAULT_BOTTOM_NAVIGATION_MARGIN
@@ -200,10 +208,15 @@ class BadgeView @JvmOverloads constructor(
             }
             background = badgeBg
         }
-        if (animate)
+        if (animate) {
+            this.clearAnimation()
             showAnimator.invoke(this)
-        else
+        } else {
+            scaleX = 1f
+            scaleY = 1f
+            alpha = 1f
             visibility = View.VISIBLE
+        }
     }
 
     fun hide(animate: Boolean = true) {
@@ -214,32 +227,37 @@ class BadgeView @JvmOverloads constructor(
             visibility = View.GONE
     }
 
-    fun setNumber(value: Int?) {
+    fun setNumber(value: Int?, animate: Boolean = true) {
         if (value == null || value <= visibilityBound) {
-            hide(true)
+            hide(animate)
             return
         }
         val text = if (value > upperBound) "$upperBound$limitSuffix" else value.toString()
         horizontalBadgeMargin = setHorizontalBadgeMargin(value)
-        showText(text, true)
+        showText(text, animate)
     }
 
     fun showText(label: CharSequence, animate: Boolean = true) {
-        if (label == text && isShown) return
-        applyLayoutParams()
+        if (label == text && isShown && alpha == 1f) return
         text = label
+        clearAnimation()
         if (isShown && animate) {
-            animate()
-                .scaleX(DEFAULT_UPDATE_SCALE)
-                .scaleY(DEFAULT_UPDATE_SCALE)
-                .withEndAction {
-                    animate().scaleX(1f).scaleY(1f)
-                        .start()
-                }
-                .start()
+            runUpdateAnimation()
         } else {
             show(animate)
         }
+    }
+
+    private fun runUpdateAnimation() {
+        applyLayoutParams()
+        animate()
+            .scaleX(DEFAULT_UPDATE_SCALE)
+            .scaleY(DEFAULT_UPDATE_SCALE)
+            .withEndAction {
+                animate().scaleX(1f).scaleY(1f)
+                    .start()
+            }
+            .start()
     }
 
     fun toggle(
@@ -290,7 +308,11 @@ class BadgeView @JvmOverloads constructor(
     }
 
     private fun dipToPixels(dip: Int): Int {
-        val px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip.toFloat(), resources.displayMetrics)
+        val px = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            dip.toFloat(),
+            resources.displayMetrics
+        )
         return px.toInt()
     }
 
