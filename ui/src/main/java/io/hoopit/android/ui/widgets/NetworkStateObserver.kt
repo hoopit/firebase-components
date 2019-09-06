@@ -6,7 +6,8 @@ import androidx.lifecycle.Observer
 import io.hoopit.android.ui.NetworkState
 
 abstract class NetworkStateObserver(
-    private val networkState: LiveData<NetworkState>
+    private val networkState: LiveData<NetworkState>,
+    private val removeOnFailed: Boolean = true
 ) : Observer<NetworkState> {
 
     final override fun onChanged(it: NetworkState?) {
@@ -17,7 +18,7 @@ abstract class NetworkStateObserver(
                 onSuccess(it)
             }
             NetworkState.Status.FAILED -> {
-                networkState.removeObserver(this)
+                if (removeOnFailed) networkState.removeObserver(this)
                 onError(it)
             }
             NetworkState.Status.RUNNING -> {
