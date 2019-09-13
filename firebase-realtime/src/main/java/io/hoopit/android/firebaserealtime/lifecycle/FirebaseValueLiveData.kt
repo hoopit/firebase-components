@@ -10,15 +10,17 @@ import io.hoopit.android.firebaserealtime.ext.getValueOrNull
 import kotlin.reflect.KClass
 
 class FirebaseValueLiveData<T : Any>(
-    private val query: Query,
+    private val query: Query?,
     private val classModel: KClass<T>,
     disconnectDelay: Long
 ) : DelayedDisconnectLiveData<T?>(disconnectDelay), ValueEventListener {
     override fun delayedOnActive() {
-        query.addValueEventListener(this)
+        query?.addValueEventListener(this)
     }
 
-    override fun delayedOnInactive() = query.removeEventListener(this)
+    override fun delayedOnInactive() {
+        query?.removeEventListener(this)
+    }
 
     override fun onCancelled(error: DatabaseError) {}
 

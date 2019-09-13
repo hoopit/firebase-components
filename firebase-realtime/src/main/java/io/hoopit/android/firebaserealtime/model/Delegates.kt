@@ -12,7 +12,7 @@ import kotlin.reflect.KProperty
 
 inline fun <reified T : Any> IFirebaseResource.firebaseValue(
     disconnectDelay: Long = this.disconnectDelay,
-    crossinline ref: () -> Query
+    crossinline ref: () -> Query?
 ): Lazy<LiveData<T?>> {
     return lazy {
         FirebaseValueLiveData(ref(), T::class, disconnectDelay)
