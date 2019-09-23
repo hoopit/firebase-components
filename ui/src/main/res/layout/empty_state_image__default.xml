@@ -9,7 +9,7 @@
         android:id="@+id/iv_empty_image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="32dp"
         android:scaleType="fitCenter"
         app:layout_constrainedHeight="true"
         app:layout_constrainedWidth="true"
