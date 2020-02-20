@@ -16,7 +16,7 @@ android {
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         configurations.all {
-            resolutionStrategy.force "com.android.tools.build.jetifier:jetifier-core:1.0.0-beta07"
+            resolutionStrategy.force "com.android.tools.build.jetifier:jetifier-core:1.0.0-beta09"
         }
 
     }
