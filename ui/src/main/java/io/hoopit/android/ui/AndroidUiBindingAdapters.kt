@@ -88,7 +88,7 @@ fun TextInputLayout.setErrorMessage(@StringRes errorMessage: Int?) {
 fun ImageView.imageTint(@ColorInt colorRes: Int) {
     ImageViewCompat.setImageTintList(
         this,
-        ColorStateList.valueOf(colorRes)
+            ColorStateList.valueOf(colorRes)
     )
 }
 
@@ -98,5 +98,10 @@ fun ImageView.imageTint(@ColorInt colorRes: Int) {
 @BindingAdapter("android:checked")
 fun CompoundButton.setChecked(isChecked: Boolean?) {
     this.isChecked = isChecked ?: false
+}
+
+@BindingAdapter("app:title")
+fun EmptyStateImage.setEmptyStateTitle(title: CharSequence?) {
+    this.setTitle(title)
 }
 
