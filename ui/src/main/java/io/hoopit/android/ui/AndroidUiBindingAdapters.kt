@@ -101,4 +101,3 @@ fun CompoundButton.setChecked(isChecked: Boolean?) {
 fun EmptyStateImage.setEmptyStateTitle(title: CharSequence?) {
     this.setTitle(title)
 }
-
