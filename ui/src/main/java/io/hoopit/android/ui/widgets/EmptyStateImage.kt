@@ -32,6 +32,12 @@ class EmptyStateImage @JvmOverloads constructor(
         typedArray.recycle()
     }
 
+    fun setTitle(title: CharSequence?) {
+        if (title == null) return
+        val titleView: TextView = findViewById(R.id.tv_empty_title)
+        titleView.text = title
+    }
+
     fun setText(text: CharSequence?) {
         if (text == null) return
         val textView: TextView = findViewById(R.id.tv_empty_text)

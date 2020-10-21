@@ -86,10 +86,7 @@ fun TextInputLayout.setErrorMessage(@StringRes errorMessage: Int?) {
 
 @BindingAdapter("app:tint")
 fun ImageView.imageTint(@ColorInt colorRes: Int) {
-    ImageViewCompat.setImageTintList(
-        this,
-        ColorStateList.valueOf(colorRes)
-    )
+    ImageViewCompat.setImageTintList(this, ColorStateList.valueOf(colorRes))
 }
 
 /**
@@ -100,3 +97,7 @@ fun CompoundButton.setChecked(isChecked: Boolean?) {
     this.isChecked = isChecked ?: false
 }
 
+@BindingAdapter("app:title")
+fun EmptyStateImage.setEmptyStateTitle(title: CharSequence?) {
+    this.setTitle(title)
+}
